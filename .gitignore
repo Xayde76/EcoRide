@@ -1,0 +1,25 @@
+# Ignorer les fichiers de configuration sensibles
+.env
+mail-config.php
+
+# Ignorer les répertoires générés automatiquement
+/data/mongodb/
+/dump/
+/vendor/
+
+# Ignorer les fichiers système et temporaires
+*.log
+*.lock
+.DS_Store
+Thumbs.db
+
+# Node (si jamais tu en utilises un jour)
+node_modules/
+
+# Docker volumes (si tu en montes en local)
+docker-volume/
+
+# Ignorer les backups, dumps, etc.
+*.sql
+*.bak
+*.gz
