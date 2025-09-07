@@ -1,0 +1,112 @@
+CREATE TABLE utilisateurs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nom VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  password VARCHAR(255),
+  credits INT DEFAULT 20
+);
+
+CREATE TABLE trajets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  conducteur_nom VARCHAR(100),
+  note INT,
+  places_restantes INT,
+  prix INT,
+  date DATE,
+  heure_depart TIME,
+  heure_arrivee TIME,
+  ecovoyage BOOLEAN,
+  depart VARCHAR(100),
+  destination VARCHAR(100),
+  photo VARCHAR(255) -- chemin vers l'image du conducteur
+);
+
+CREATE TABLE roles_utilisateurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    utilisateur_id INT NOT NULL,
+    role ENUM('passager', 'chauffeur', 'chauffeur_passager') NOT NULL,
+    date_attribution DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE covoiturage (
+  covoiturage_id INT AUTO_INCREMENT PRIMARY KEY,
+  utilisateur_id INT NOT NULL,
+  date_depart DATE NOT NULL,
+  heure_depart TIME NOT NULL,
+  lieu_depart VARCHAR(100) NOT NULL,
+  date_arrivee DATE,
+  heure_arrivee TIME,
+  lieu_arrivee VARCHAR(100) NOT NULL,
+  nb_place INT NOT NULL,
+  prix_personne FLOAT NOT NULL,
+  statut ENUM('disponible', 'complet', 'annulé') DEFAULT 'disponible',
+  type_vehicule ENUM('essence', 'diesel', 'électrique', 'hybride'),
+  vehicule_id INT,
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (vehicule_id) REFERENCES vehicules(id) ON DELETE CASCADE
+);
+
+CREATE TABLE participation (
+  covoiturage_id INT,
+  utilisateur_id INT,
+  PRIMARY KEY (covoiturage_id, utilisateur_id),
+  FOREIGN KEY (covoiturage_id) REFERENCES covoiturage(covoiturage_id) ON DELETE CASCADE,
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE vehicules (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  utilisateur_id INT NOT NULL,
+  plaque VARCHAR(20) NOT NULL,
+  date_immat DATE NOT NULL,
+  modele VARCHAR(100) NOT NULL,
+  marque VARCHAR(100) NOT NULL,
+  couleur VARCHAR(50) NOT NULL,
+  places INT NOT NULL,
+  preferences TEXT,
+  date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  type_vehicule ENUM('essence', 'diesel', 'électrique', 'hybride') NOT NULL DEFAULT 'essence',
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE voyages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  utilisateur_id INT NOT NULL,
+  vehicule_id INT NOT NULL,
+  depart VARCHAR(100) NOT NULL,
+  destination VARCHAR(100) NOT NULL,
+  date_depart DATETIME NOT NULL,
+  prix DECIMAL(6,2) NOT NULL,
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id),
+  FOREIGN KEY (vehicule_id) REFERENCES vehicules(id)
+);
+
+CREATE TABLE avis (
+  avis_id INT AUTO_INCREMENT PRIMARY KEY,
+  covoiturage_id INT NOT NULL,
+  utilisateur_id INT,
+  auteur VARCHAR(100) DEFAULT 'Anonyme',
+  commentaire VARCHAR(255),
+  note INT CHECK (note >= 1 AND note <= 5),
+  statut ENUM('publié', 'en_attente', 'rejeté') DEFAULT 'publié',
+  date_avis TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (covoiturage_id) REFERENCES covoiturage(covoiturage_id) ON DELETE CASCADE,
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id) ON DELETE SET NULL
+);
+
+CREATE TABLE roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nom VARCHAR(50) NOT NULL UNIQUE
+);
+INSERT INTO roles (nom) VALUES
+  ('admin'),
+  ('employe'),
+  ('utilisateur');
+
+ALTER TABLE utilisateurs
+ADD role_id INT DEFAULT 3,
+ADD FOREIGN KEY (role_id) REFERENCES roles(id);
+
+ALTER TABLE utilisateurs ADD COLUMN actif BOOLEAN DEFAULT TRUE;
+

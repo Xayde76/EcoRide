@@ -1,0 +1,90 @@
+<div id="modal-connexion" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+
+    <div class="slide-wrapper">
+      <div class="form-slider">
+        <!-- Connexion -->
+        <div class="form-block" id="form-login">
+          <h2>Connexion</h2>
+          <form id="form-login-ajax" method="POST">
+            <input
+              type="email"
+              name="email"
+              placeholder="Adresse email"
+              required
+            />
+            <div class="password-wrapper">
+              <input
+                type="password"
+                name="password"
+                placeholder="Mot de passe"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                aria-label="Afficher le mot de passe"
+              >
+                👁️
+              </button>
+            </div>
+
+            <button type="submit" class="connect">Se connecter</button>
+          </form>
+          <button id="show-register" class="switch-btn">Créer un compte</button>
+        </div>
+
+        <!-- Inscription -->
+        <div class="form-block" id="form-register">
+          <h2>Inscription</h2>
+          <form action="actions/traitement_inscription.php" method="POST">
+            <input type="text" name="nom" placeholder="Nom complet" required />
+            <input
+              type="email"
+              name="email"
+              placeholder="Adresse email"
+              required
+            />
+            <div class="password-wrapper">
+              <input
+                type="password"
+                name="password"
+                placeholder="Mot de passe"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                aria-label="Afficher le mot de passe"
+              >
+                👁️
+              </button>
+            </div>
+
+            <div class="password-wrapper">
+              <input
+                type="password"
+                name="confirm"
+                placeholder="Confirmer le mot de passe"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                aria-label="Afficher le mot de passe"
+              >
+                👁️
+              </button>
+            </div>
+
+            <button type="submit" class="connect">S'inscrire</button>
+          </form>
+          <button id="show-login" class="switch-btn">
+            J'ai déjà un compte
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
