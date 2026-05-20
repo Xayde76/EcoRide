@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  ecoride_network:
+    driver: bridge
+
 services:
   web:
     build:
@@ -8,10 +12,15 @@ services:
     container_name: ecoride_web
     ports:
       - "8080:80"
+    env_file:
+      - .env
     volumes:
       - ./www:/var/www/html
     depends_on:
       - db
+      - mongodb
+    networks:
+      - ecoride_network
     restart: unless-stopped
 
   db:
@@ -26,6 +35,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - ecoride_network
     restart: unless-stopped
 
   phpmyadmin:
@@ -36,15 +47,22 @@ services:
     environment:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    networks:
+      - ecoride_network
     restart: unless-stopped
 
   mongodb:
     image: mongo
-    container_name: mongodb
+    container_name: ecoride_mongodb
     ports:
       - "27017:27017"
     volumes:
-      - ./data/mongodb:/data/db
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - ecoride_network
+    restart: unless-stopped
 
 volumes:
   db_data:
+  mongodb_data:

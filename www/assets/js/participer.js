@@ -6,6 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btn.addEventListener("click", async () => {
     const id = btn.dataset.id;
+    const prix = btn.dataset.prix;
+
+    const confirmed = confirm(
+      `Confirmer votre participation ?\n\n${prix} crédit(s) seront débités de votre compte.`
+    );
+    if (!confirmed) return;
 
     const res = await fetch("../actions/participer.php", {
       method: "POST",

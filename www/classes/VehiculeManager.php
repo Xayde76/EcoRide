@@ -1,73 +1,114 @@
 <?php
 
-class VehiculeManager {
-  private PDO $pdo;
-  private int $userId;
+class VehiculeManager extends BaseManager {
+    private int $userId;
+    private const VALID_TYPES = ['essence', 'diesel', 'electrique', 'hybride'];
 
-  public function __construct(PDO $pdo, int $userId) {
-    $this->pdo = $pdo;
-    $this->userId = $userId;
-  }
-
-  public function ajouterVehicule(array $data): array {
-    $typesValid = ['essence', 'diesel', 'électrique', 'hybride'];
-
-    if (!in_array($data['type_vehicule'], $typesValid)) {
-      throw new InvalidArgumentException("Type de véhicule invalide.");
+    public function __construct(PDO $pdo, int $userId) {
+        parent::__construct($pdo);
+        $this->userId = $userId;
     }
 
-    $preferences = implode(', ', $data['prefs'] ?? []);
-    if (!empty(trim($data['prefs_autres'] ?? ''))) {
-      $preferences .= ($preferences ? ', ' : '') . trim($data['prefs_autres']);
+    public function ajouterVehicule(array $data): array {
+        try {
+            $errors = [];
+
+            if (!ValidationService::validateInArray($data['type_vehicule'] ?? '', self::VALID_TYPES)) {
+                $errors['type_vehicule'] = 'Type de véhicule invalide.';
+            }
+
+            if (!ValidationService::validateString($data['plaque'] ?? '', 1, 20)) {
+                $errors['plaque'] = 'Plaque invalide.';
+            }
+
+            if (!ValidationService::validateString($data['modele'] ?? '', 1, 100)) {
+                $errors['modele'] = 'Modèle invalide.';
+            }
+
+            if (!ValidationService::validateString($data['marque'] ?? '', 1, 100)) {
+                $errors['marque'] = 'Marque invalide.';
+            }
+
+            if (!ValidationService::validateInteger($data['places'] ?? 0, 1, 10)) {
+                $errors['places'] = 'Nombre de places invalide.';
+            }
+
+            if (!empty($errors)) {
+                throw new ValidationException('Validation failed', $errors);
+            }
+
+            $preferences = implode(', ', array_slice($data['prefs'] ?? [], 0, 10));
+            if (!empty($data['prefs_autres'])) {
+                $preferences .= ($preferences ? ', ' : '') . substr($data['prefs_autres'], 0, 100);
+            }
+
+            $dateImmat = !empty($data['date_immat']) ? $data['date_immat'] : date('Y-m-d');
+            $couleur = $data['couleur'] ?? 'Non spécifiée';
+
+            $stmt = $this->prepare("
+                INSERT INTO vehicules (utilisateur_id, plaque, date_immat, modele, marque, couleur, places, preferences, type_vehicule)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+
+            $this->execute($stmt, [
+                $this->userId,
+                $data['plaque'],
+                $dateImmat,
+                $data['modele'],
+                $data['marque'],
+                $couleur,
+                (int)$data['places'],
+                $preferences,
+                $data['type_vehicule']
+            ]);
+
+            $vehicleId = $this->lastInsertId();
+            LoggerService::info('Vehicle added', ['user_id' => $this->userId, 'vehicle_id' => $vehicleId]);
+
+            return [
+                'success' => true,
+                'message' => 'Véhicule ajouté avec succès.',
+                'vehicule' => [
+                    'id' => $vehicleId,
+                    'plaque' => $data['plaque'],
+                    'modele' => $data['modele'],
+                    'marque' => $data['marque'],
+                    'couleur' => $couleur,
+                    'type_vehicule' => $data['type_vehicule']
+                ]
+            ];
+        } catch (ValidationException $e) {
+            return ['success' => false, 'error' => $e->getMessage(), 'errors' => $e->getErrors()];
+        } catch (\PDOException $e) {
+            LoggerService::error('Vehicle add error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => 'Erreur lors de l\'ajout du véhicule.'];
+        }
     }
 
-    $stmt = $this->pdo->prepare("
-      INSERT INTO vehicules (utilisateur_id, plaque, date_immat, modele, marque, couleur, places, preferences, type_vehicule)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+    public function supprimerVehicule(int $vehiculeId): array {
+        try {
+            if (!ValidationService::validateInteger($vehiculeId, 1)) {
+                return ['success' => false, 'error' => 'ID véhicule invalide.'];
+            }
 
-    $stmt->execute([
-      $this->userId,
-      $data['plaque'],
-      $data['date_immat'],
-      $data['modele'],
-      $data['marque'],
-      $data['couleur'],
-      $data['places'],
-      $preferences,
-      $data['type_vehicule']
-    ]);
+            $stmt = $this->prepare("SELECT id FROM vehicules WHERE id = ? AND utilisateur_id = ?");
+            $this->execute($stmt, [$vehiculeId, $this->userId]);
+            $vehicule = $this->fetch($stmt);
 
-    return [
-      'id' => $this->pdo->lastInsertId(),
-      'plaque' => $data['plaque'],
-      'modele' => $data['modele'],
-      'marque' => $data['marque'],
-      'couleur' => $data['couleur'],
-      'type_vehicule' => $data['type_vehicule']
-    ];
-  }
+            if (!$vehicule) {
+                LoggerService::security('Unauthorized vehicle deletion attempt', ['user_id' => $this->userId, 'vehicle_id' => $vehiculeId]);
+                return ['success' => false, 'error' => 'Véhicule non trouvé.'];
+            }
 
-  public function supprimerVehicule(int $vehiculeId): array {
-    // Vérifie la propriété du véhicule
-    $stmt = $this->pdo->prepare("SELECT * FROM vehicules WHERE id = ? AND utilisateur_id = ?");
-    $stmt->execute([$vehiculeId, $this->userId]);
-    $vehicule = $stmt->fetch();
+            $stmt = $this->prepare("DELETE FROM vehicules WHERE id = ?");
+            $this->execute($stmt, [$vehiculeId]);
 
-    if (!$vehicule) {
-      http_response_code(403);
-      return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.'];
+            LoggerService::info('Vehicle deleted', ['user_id' => $this->userId, 'vehicle_id' => $vehiculeId]);
+
+            return ['success' => true, 'message' => 'Véhicule supprimé avec succès.'];
+        } catch (\PDOException $e) {
+            LoggerService::error('Vehicle deletion error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => 'Erreur lors de la suppression.'];
+        }
     }
-
-    // Covoiturages liés (au cas où ON DELETE CASCADE n’est pas configuré)
-    $stmt = $this->pdo->prepare("SELECT covoiturage_id FROM covoiturage WHERE vehicule_id = ?");
-    $stmt->execute([$vehiculeId]);
-    $voyageIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    // Suppression
-    $stmt = $this->pdo->prepare("DELETE FROM vehicules WHERE id = ?");
-    $stmt->execute([$vehiculeId]);
-
-    return ['success' => true, 'deletedVoyages' => $voyageIds];
-  }
 }

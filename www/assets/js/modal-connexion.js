@@ -112,7 +112,7 @@ class ModalConnexion {
             if (data.success) {
               location.replace(data.redirect || `${BASE_URL}/index.php`);
             } else {
-              this.loginError.textContent = data.message || "Erreur inconnue.";
+              this.loginError.textContent = data.error || data.message || "Erreur inconnue.";
             }
           })
           .catch(() => {
@@ -134,10 +134,12 @@ class ModalConnexion {
             if (data.success) {
               location.replace(data.redirect || `${BASE_URL}/index.php`);
             } else {
-              this.registerError.textContent = data.message || "Erreur inconnue.";
+              // Affiche le premier message d'erreur de champ s'il existe
+              const fieldError = data.errors ? Object.values(data.errors)[0] : null;
+              this.registerError.textContent = fieldError || data.error || data.message || "Erreur inconnue.";
             }
           })
-          .catch(() => {
+          .catch((err) => {
             console.error("Erreur brute :", err);
             this.registerError.textContent = "Erreur de connexion au serveur.";
           });

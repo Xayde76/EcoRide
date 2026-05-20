@@ -1,31 +1,37 @@
 <?php
 session_start();
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../bootstrap.php';
 
-if (!isset($_GET['id'])) {
-    header('Location: covoiturage.php');
+if (!isset($_GET['id']) || !ValidationService::validateInteger($_GET['id'], 1)) {
+    header('Location: ' . BASE_URL . '/pages/covoiturage.php');
     exit;
 }
 
-$id = $_GET['id'];
+$id = (int)$_GET['id'];
 
-// Récupération des informations du covoiturage
-$stmt = $pdo->prepare("SELECT c.*, u.nom AS conducteur_nom, v.modele, v.marque, v.couleur, v.preferences
-                       FROM covoiturage c
-                       JOIN utilisateurs u ON c.utilisateur_id = u.id
-                       LEFT JOIN vehicules v ON c.vehicule_id = v.id
-                       WHERE c.covoiturage_id = ?");
+$stmt = $pdo->prepare("
+    SELECT c.*, u.nom AS conducteur_nom, v.modele, v.marque, v.couleur, v.preferences,
+           ROUND(AVG(a.note), 1) AS note_conducteur,
+           COUNT(a.note)         AS nb_avis_conducteur
+    FROM covoiturage c
+    JOIN utilisateurs u ON c.utilisateur_id = u.id
+    LEFT JOIN vehicules v ON c.vehicule_id = v.id
+    LEFT JOIN avis a ON a.covoiturage_id IN (
+        SELECT covoiturage_id FROM covoiturage WHERE utilisateur_id = u.id
+    ) AND a.statut = 'publié'
+    WHERE c.covoiturage_id = ?
+    GROUP BY c.covoiturage_id, u.nom, v.modele, v.marque, v.couleur, v.preferences
+");
 $stmt->execute([$id]);
 $trajet = $stmt->fetch();
 
 if (!$trajet) {
-    echo "<p>Trajet introuvable.</p>";
+    header('Location: ' . BASE_URL . '/pages/covoiturage.php');
     exit;
 }
 
-$eco = $trajet['type_vehicule'] === 'électrique' ? 'Oui' : 'Non';
+$eco = $trajet['type_vehicule'] === 'electrique' ? 'Oui' : 'Non';
 
-// Récupération des avis liés à ce covoiturage
 $stmtAvis = $pdo->prepare("SELECT auteur, commentaire, note FROM avis WHERE statut = 'publié' AND covoiturage_id = ?");
 $stmtAvis->execute([$id]);
 $avis = $stmtAvis->fetchAll();
@@ -35,89 +41,177 @@ $avis = $stmtAvis->fetchAll();
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Détail du Voyage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= htmlspecialchars($trajet['lieu_depart']) ?> → <?= htmlspecialchars($trajet['lieu_arrivee']) ?> | EcoRide</title>
+  <meta name="description" content="Covoiturage de <?= htmlspecialchars($trajet['lieu_depart']) ?> à <?= htmlspecialchars($trajet['lieu_arrivee']) ?> le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> pour <?= (int)$trajet['prix_personne'] ?> crédits. Réservez votre place sur EcoRide.">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Covoiturage <?= htmlspecialchars($trajet['lieu_depart']) ?> → <?= htmlspecialchars($trajet['lieu_arrivee']) ?> | EcoRide">
+  <meta property="og:description" content="Trajet le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> pour <?= (int)$trajet['prix_personne'] ?> crédits. Conducteur : <?= htmlspecialchars($trajet['conducteur_nom']) ?>.">
+  <meta property="og:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="wrapper">
-    <?php include '../partials/menu.php'; ?>
-    <main>
-      <h1 class="hero-title">Ce Voyage</h1>
-      <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert-error">
-          <?= htmlspecialchars($_SESSION['error']) ?>
-          <?php unset($_SESSION['error']); ?>
-        </div>
-      <?php endif; ?>
-      <section class="detail-voyage-card">
-        <div class="info-global">
-          <p><strong><?= htmlspecialchars($trajet['lieu_depart']) ?></strong> → <strong><?= htmlspecialchars($trajet['lieu_arrivee']) ?></strong></p>
-          <p>le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> pour <?= htmlspecialchars($trajet['prix_personne']) ?> crédits</p>
-        </div>
+  <?php include __DIR__ . '/../partials/menu.php'; ?>
 
-        <div class="grille-voyage">
-          <div class="horaires">
-            <p><?= date('H\hi', strtotime($trajet['heure_depart'])) ?></p>
-            <?php if ($trajet['heure_arrivee']): ?>
-              <div class="ligne-temps"></div>
-              <p><?= date('H\hi', strtotime($trajet['heure_arrivee'])) ?></p>
-            <?php endif; ?>
-            <p>Places restantes : <?= htmlspecialchars($trajet['nb_place']) ?></p>
-            <p>Écologique : <?= $eco ?></p>
+  <main class="wrapper user-page">
+
+    <!-- Bannière -->
+    <div class="user-banner">
+      <div class="user-banner-identity">
+        <div class="user-avatar">🚗</div>
+        <div>
+          <h1><?= htmlspecialchars($trajet['lieu_depart']) ?> → <?= htmlspecialchars($trajet['lieu_arrivee']) ?></h1>
+          <p>le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> · <?= (int)$trajet['prix_personne'] ?> crédits</p>
+        </div>
+      </div>
+      <a href="covoiturage.php" class="detail-retour-btn">← Retour</a>
+    </div>
+
+    <?php if (isset($_SESSION['error'])): ?>
+      <div class="alert-error">
+        <?= htmlspecialchars($_SESSION['error']) ?>
+        <?php unset($_SESSION['error']); ?>
+      </div>
+    <?php endif; ?>
+
+    <!-- Layout 2 colonnes -->
+    <div class="detail-layout">
+
+      <!-- Colonne principale : infos trajet -->
+      <div class="detail-main">
+
+        <!-- Horaires -->
+        <div class="user-card detail-trip-card">
+          <div class="detail-times">
+            <div class="detail-time-hour">
+              <span class="time-value"><?= date('H\hi', strtotime($trajet['heure_depart'])) ?></span>
+            </div>
+            <div class="detail-time-route">
+              <span class="time-city"><?= htmlspecialchars($trajet['lieu_depart']) ?></span>
+              <div class="detail-time-line">
+                <div class="detail-time-bar"></div>
+                <span class="detail-time-arrow">→</span>
+              </div>
+              <span class="time-city"><?= htmlspecialchars($trajet['lieu_arrivee']) ?></span>
+            </div>
           </div>
 
-          <div class="conducteur-box">
-            <img src="../images/profil/default.png" alt="Conducteur" class="conducteur-photo">
-            <p><?= htmlspecialchars($trajet['conducteur_nom']) ?></p>
-            <div class="participer-wrapper">
-              <button class="btn" id="participer-btn" data-id="<?= $trajet['covoiturage_id'] ?>">Participer</button>
-              <p id="message-participation" style="margin-top: 1rem; color: red;"></p>
+          <!-- Badges -->
+          <div class="detail-badges">
+            <span class="detail-badge">🪑 <?= (int)$trajet['nb_place'] ?> place<?= $trajet['nb_place'] > 1 ? 's' : '' ?> restante<?= $trajet['nb_place'] > 1 ? 's' : '' ?></span>
+            <?php if ($eco === 'Oui'): ?>
+              <span class="detail-badge detail-badge--eco">🌿 Voyage écologique</span>
+            <?php else: ?>
+              <span class="detail-badge">⛽ Non écologique</span>
+            <?php endif; ?>
+          </div>
+
+          <!-- Véhicule -->
+          <div class="detail-vehicule">
+            <h3>Véhicule</h3>
+            <p><?= htmlspecialchars($trajet['marque']) ?> <?= htmlspecialchars($trajet['modele']) ?> · <?= ucfirst($trajet['type_vehicule']) ?></p>
+            <?php if (!empty($trajet['preferences'])): ?>
+              <p class="detail-prefs">💬 <?= htmlspecialchars($trajet['preferences']) ?></p>
+            <?php endif; ?>
+          </div>
+        </div>
+
+      </div><!-- /detail-main -->
+
+      <!-- Sidebar : conducteur + participation -->
+      <div class="detail-sidebar">
+        <div class="user-card detail-conducteur-card">
+          <div class="detail-conducteur-initiale">
+            <?= htmlspecialchars(strtoupper(mb_substr($trajet['conducteur_nom'], 0, 1))) ?>
+          </div>
+          <h3><?= htmlspecialchars($trajet['conducteur_nom']) ?></h3>
+          <p class="detail-conducteur-label">Conducteur</p>
+          <?php if ($trajet['nb_avis_conducteur'] > 0): ?>
+            <div class="detail-conducteur-note">
+              <span class="star-full">★</span>
+              <strong><?= number_format($trajet['note_conducteur'], 1) ?></strong>
+              <span class="detail-conducteur-nb-avis">(<?= $trajet['nb_avis_conducteur'] ?> avis)</span>
+            </div>
+          <?php else: ?>
+            <p class="detail-conducteur-nb-avis">Aucun avis pour le moment</p>
+          <?php endif; ?>
+          <button class="btn detail-participer-btn" id="participer-btn" data-id="<?= $trajet['covoiturage_id'] ?>" data-prix="<?= (int)$trajet['prix_personne'] ?>">Participer</button>
+          <p id="message-participation"></p>
+        </div>
+      </div>
+
+    </div><!-- /detail-layout -->
+
+    <!-- Avis -->
+    <section class="avis-section">
+      <?php if (empty($avis)): ?>
+        <div class="avis-empty-block">
+          <div class="avis-empty-icon">💬</div>
+          <p class="avis-empty-title">Aucun avis pour le moment</p>
+          <p class="avis-empty-sub">Les passagers pourront laisser un avis après le trajet.</p>
+        </div>
+      <?php else:
+        $noteTotal = array_sum(array_column($avis, 'note'));
+        $noteMoy   = $noteTotal / count($avis);
+      ?>
+        <div class="avis-header-section">
+          <div>
+            <h2>Avis des passagers</h2>
+            <p class="avis-count"><?= count($avis) ?> avis</p>
+          </div>
+          <div class="avis-moyenne">
+            <span class="avis-moyenne-note"><?= number_format($noteMoy, 1) ?></span>
+            <div>
+              <div class="avis-moyenne-stars">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                  <span class="<?= $i <= round($noteMoy) ? 'star-full' : 'star-empty' ?>">★</span>
+                <?php endfor; ?>
+              </div>
+              <span class="avis-moyenne-label">sur 5</span>
             </div>
           </div>
         </div>
-
-        <div class="details">
-          <h3>Détails :</h3>
-          <p>Véhicule : <?= htmlspecialchars($trajet['modele']) ?> / <?= htmlspecialchars($trajet['marque']) ?> / <?= htmlspecialchars($trajet['type_vehicule']) ?></p>
-          <p>Commentaire : <?= htmlspecialchars($trajet['preferences'] ?? 'Aucun') ?></p>
-        </div>
-      </section>
-
-      <div class="retour-wrapper">
-      <a href="covoiturage.php" class="retour-link">&larr; Retour aux covoiturages</a>
-    </div>
-
-
-      <section class="avis-section">
-        <h2>Avis</h2>
-        <?php if (empty($avis)): ?>
-          <p>Aucun avis pour ce trajet.</p>
-        <?php else: ?>
+        <div class="avis-list">
           <?php foreach ($avis as $a): ?>
             <div class="avis-card">
-              <p><strong><?= htmlspecialchars($a['auteur']) ?></strong></p>
-              <p><?= htmlspecialchars($a['commentaire']) ?></p>
-              <p>
-                <?php for ($i = 1; $i <= 5; $i++): ?>
-                  <?= $i <= (int)$a['note'] ? '&#9733;' : '&#9734;' ?>
-                <?php endfor; ?>
-              </p>
+              <div class="avis-card-header">
+                <div class="avis-auteur-initiale"><?= htmlspecialchars(strtoupper(mb_substr($a['auteur'], 0, 1))) ?></div>
+                <div class="avis-auteur-info">
+                  <strong><?= htmlspecialchars($a['auteur']) ?></strong>
+                  <span class="avis-stars">
+                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                      <span class="<?= $i <= (int)$a['note'] ? 'star-full' : 'star-empty' ?>">★</span>
+                    <?php endfor; ?>
+                  </span>
+                </div>
+              </div>
+              <?php if (!empty($a['commentaire'])): ?>
+                <p class="avis-commentaire"><?= htmlspecialchars($a['commentaire']) ?></p>
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
-        <?php endif; ?>
-      </section>
-    </main>
-    <?php include '../partials/footer.php'; ?>
-    <?php include '../includes/layout.php'; ?>
-    <script src="../assets/js/modal-connexion.js"></script>
-    <script src="../assets/js/participer.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        new ModalConnexion();
-      });
-    </script>
-    </div>
+        </div>
+      <?php endif; ?>
+    </section>
+
+  </main>
+
+  <?php include __DIR__ . '/../partials/footer.php'; ?>
+  <?php include __DIR__ . '/../includes/layout.php'; ?>
+  <div id="injection-modal"></div>
+  <script src="../assets/js/modal-connexion.js"></script>
+  <script src="../assets/js/participer.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      new ModalConnexion();
+    });
+  </script>
+  <script src="../assets/js/menu-toggle.js" defer></script>
 </body>
 </html>

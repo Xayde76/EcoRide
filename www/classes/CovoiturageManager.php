@@ -1,55 +1,61 @@
 <?php
 
-class CovoiturageManager {
-    private PDO $pdo;
+class CovoiturageManager extends BaseManager {
     private int $userId;
 
     public function __construct(PDO $pdo, int $userId) {
-        $this->pdo = $pdo;
+        parent::__construct($pdo);
         $this->userId = $userId;
     }
 
     public function annulerCovoiturage(int $id): array {
-        $stmt = $this->pdo->prepare("SELECT * FROM covoiturage WHERE covoiturage_id = ? AND utilisateur_id = ?");
-        $stmt->execute([$id, $this->userId]);
-        $covoiturage = $stmt->fetch();
+        try {
+            if (!ValidationService::validateInteger($id, 1)) {
+                return ['success' => false, 'error' => 'ID invalide.'];
+            }
 
-        if (!$covoiturage) {
-            return ["success" => false, "error" => "Covoiturage non trouvé ou non autorisé."];
+            $stmt = $this->prepare("SELECT * FROM covoiturage WHERE covoiturage_id = ? AND utilisateur_id = ?");
+            $this->execute($stmt, [$id, $this->userId]);
+            $covoiturage = $this->fetch($stmt);
+
+            if (!$covoiturage) {
+                LoggerService::security('Unauthorized trip cancellation attempt', ['user_id' => $this->userId, 'trip_id' => $id]);
+                return ['success' => false, 'error' => 'Trajet non autorisé.'];
+            }
+
+            if ($covoiturage['statut'] !== 'disponible') {
+                return ['success' => false, 'error' => 'Ce trajet ne peut pas être supprimé.'];
+            }
+
+            $this->beginTransaction();
+
+            $stmt = $this->prepare("SELECT p.utilisateur_id FROM participation p WHERE p.covoiturage_id = ?");
+            $this->execute($stmt, [$id]);
+            $participants = $this->fetchAll($stmt);
+
+            foreach ($participants as $p) {
+                $stmt = $this->prepare("UPDATE utilisateurs SET credits = credits + ? WHERE id = ?");
+                $this->execute($stmt, [$covoiturage['prix_personne'], $p['utilisateur_id']]);
+            }
+
+            $stmt = $this->prepare("DELETE FROM participation WHERE covoiturage_id = ?");
+            $this->execute($stmt, [$id]);
+
+            $stmt = $this->prepare("DELETE FROM covoiturage WHERE covoiturage_id = ?");
+            $this->execute($stmt, [$id]);
+
+            $this->commit();
+
+            LoggerService::info('Trip deleted', ['user_id' => $this->userId, 'trip_id' => $id]);
+
+            return ['success' => true, 'message' => 'Trajet supprimé avec succès.'];
+        } catch (\PDOException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->rollBack();
+            }
+            LoggerService::error('Trip cancellation error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => 'Erreur lors de l\'annulation.'];
         }
-
-        if ($covoiturage['statut'] !== 'disponible') {
-            return ["success" => false, "error" => "Le covoiturage ne peut plus être annulé."];
-        }
-
-        $this->pdo->prepare("UPDATE covoiturage SET statut = 'annulé' WHERE covoiturage_id = ?")
-                  ->execute([$id]);
-
-        $stmt = $this->pdo->prepare("
-            SELECT u.email, u.id 
-            FROM participation p 
-            JOIN utilisateurs u ON p.utilisateur_id = u.id 
-            WHERE p.covoiturage_id = ?
-        ");
-        $stmt->execute([$id]);
-        $participants = $stmt->fetchAll();
-
-        foreach ($participants as $p) {
-            $this->pdo->prepare("UPDATE utilisateurs SET credits = credits + ? WHERE id = ?")
-                      ->execute([$covoiturage['prix_personne'], $p['id']]);
-        }
-
-        $this->pdo->prepare("DELETE FROM participation WHERE covoiturage_id = ?")->execute([$id]);
-
-        foreach ($participants as $p) {
-            @mail(
-                $p['email'],
-                "Annulation de covoiturage",
-                "Bonjour,\n\nLe covoiturage prévu le " . $covoiturage['date_depart'] . " a été annulé par le conducteur.\n\nMerci de votre compréhension."
-            );
-        }
-
-        return ["success" => true];
     }
 
     public function rechercherCovoiturages(array $filtres = []): array {
@@ -66,63 +72,79 @@ class CovoiturageManager {
             $params[] = '%' . $filtres['destination'] . '%';
         }
 
-        if (!empty($filtres['date'])) {
+        if (!empty($filtres['date']) && ValidationService::validateString($filtres['date'], 10, 10)) {
             $conditions[] = 'DATE(c.date_depart) = ?';
             $params[] = $filtres['date'];
         }
 
         if (!empty($filtres['ecologique'])) {
-            $conditions[] = "c.type_vehicule = 'électrique'";
+            $conditions[] = "c.type_vehicule = 'electrique'";
         }
 
-        if (!empty($filtres['prix_max'])) {
+        if (!empty($filtres['prix_max']) && ValidationService::validateNumber($filtres['prix_max'], 0)) {
             $conditions[] = 'c.prix_personne <= ?';
-            $params[] = $filtres['prix_max'];
+            $params[] = (float)$filtres['prix_max'];
         }
 
-        if (!empty($filtres['duree_max'])) {
+        if (!empty($filtres['duree_max']) && ValidationService::validateInteger($filtres['duree_max'], 0)) {
             $conditions[] = "TIMESTAMPDIFF(MINUTE, c.heure_depart, c.heure_arrivee) <= ?";
-            $params[] = $filtres['duree_max'];
+            $params[] = (int)$filtres['duree_max'];
         }
 
-        if (!empty($filtres['note_min'])) {
-            $conditions[] = "(
-                SELECT AVG(note) 
-                FROM avis a 
-                WHERE a.covoiturage_id = c.covoiturage_id
-            ) >= ?";
-            $params[] = $filtres['note_min'];
+        if (!empty($filtres['note_min']) && ValidationService::validateNumber($filtres['note_min'], 0, 5)) {
+            $conditions[] = "EXISTS (SELECT 1 FROM avis WHERE covoiturage_id = c.covoiturage_id AND note >= ?)";
+            $params[] = (float)$filtres['note_min'];
         }
 
         $query = "
-            SELECT c.*, u.nom AS conducteur_nom, v.marque, v.modele, v.preferences, v.couleur
+            SELECT c.*, u.nom AS conducteur_nom, u.id AS conducteur_id, v.marque, v.modele, v.preferences, v.couleur,
+                   ROUND(AVG(a.note), 1) AS note_conducteur,
+                   COUNT(a.note)         AS nb_avis_conducteur
             FROM covoiturage c
             JOIN utilisateurs u ON c.utilisateur_id = u.id
             LEFT JOIN vehicules v ON c.vehicule_id = v.id
+            LEFT JOIN avis a ON a.covoiturage_id IN (
+                SELECT covoiturage_id FROM covoiturage c2 WHERE c2.utilisateur_id = u.id
+            ) AND a.statut = 'publié'
         ";
 
         if (!empty($conditions)) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $query .= ' ORDER BY c.date_depart ASC';
+        $query .= ' GROUP BY c.covoiturage_id, u.nom, u.id, v.marque, v.modele, v.preferences, v.couleur';
+        $query .= ' ORDER BY c.date_depart ASC LIMIT 100';
 
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll();
+        try {
+            $stmt = $this->prepare($query);
+            $this->execute($stmt, $params);
+            return $this->fetchAll($stmt);
+        } catch (\PDOException $e) {
+            LoggerService::error('Search error', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     public function suggereProchaineDate(string $depart, string $destination): ?string {
-        $stmt = $this->pdo->prepare("
+        if (!ValidationService::validateString($depart, 1, 255) || !ValidationService::validateString($destination, 1, 255)) {
+            return null;
+        }
+
+        $stmt = $this->prepare("
             SELECT MIN(c.date_depart) as prochaine_date
             FROM covoiturage c
-            WHERE c.lieu_depart LIKE ? 
-            AND c.lieu_arrivee LIKE ? 
+            WHERE c.lieu_depart LIKE ?
+            AND c.lieu_arrivee LIKE ?
             AND c.statut = 'disponible'
             AND c.date_depart > CURDATE()
         ");
-        $stmt->execute(["%$depart%", "%$destination%"]);
-        return $stmt->fetchColumn() ?: null;
+
+        try {
+            $this->execute($stmt, ["%$depart%", "%$destination%"]);
+            return $this->fetchColumn($stmt) ?: null;
+        } catch (\PDOException $e) {
+            LoggerService::error('Date suggestion error', ['error' => $e->getMessage()]);
+            return null;
+        }
     }
 }

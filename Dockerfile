@@ -1,16 +1,32 @@
 FROM php:8.2-apache
 
-# Mise à jour + installation des dépendances pour MongoDB + PDO MySQL
+# Dépendances système
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     pkg-config \
     libssl-dev \
     unzip \
-    && docker-php-ext-install pdo pdo_mysql
+    && docker-php-ext-install pdo pdo_mysql \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Installation de l'extension MongoDB via PECL
+# Extension MongoDB
 RUN pecl install mongodb \
     && echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
 
-# Copie de tes fichiers PHP dans le conteneur (optionnel si tu utilises un volume)
+# Modules Apache
+RUN a2enmod rewrite headers
+
+# Configuration Apache production
+COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Configuration PHP production
+COPY php/production.ini /usr/local/etc/php/conf.d/production.ini
+
+# Fichiers de l'application
 COPY ./www /var/www/html
+
+# Dossier uploads (sera monté par le volume Fly.io)
+RUN mkdir -p /var/www/html/images/profil \
+    && chown -R www-data:www-data /var/www/html
+
+EXPOSE 80

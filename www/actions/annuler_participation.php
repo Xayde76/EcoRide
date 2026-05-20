@@ -1,24 +1,31 @@
 <?php
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../classes/VoyageManager.php';
+session_start();
+require_once __DIR__ . '/../bootstrap.php';
 
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? null;
-    $userId = $_SESSION['user_id'] ?? null;
-
-    if (!$id || !$userId) {
-        echo json_encode(["success" => false, "error" => "Requête invalide."]);
-        exit;
-    }
-
-    $manager = new VoyageManager($pdo, (int)$userId);
-    $result = $manager->annulerParticipation((int)$id);
-    echo json_encode($result);
-    exit;
+if (!isset($_SESSION['user_id'])) {
+    ResponseService::unauthorized('Vous devez être connecté.');
 }
 
-echo json_encode(["success" => false, "error" => "Méthode non autorisée."]);
-exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ResponseService::error('Method not allowed', 405);
+}
+
+$id = $_POST['id'] ?? null;
+
+if (!$id || !ValidationService::validateInteger($id, 1)) {
+    ResponseService::validationError('ID de participation invalide.');
+}
+
+try {
+    $manager = new VoyageManager($pdo, (int)$_SESSION['user_id']);
+    $result = $manager->annulerParticipation((int)$id);
+
+    if ($result['success']) {
+        ResponseService::success(['new_credits' => $result['new_credits']], $result['message'] ?? 'Participation annulée.');
+    } else {
+        ResponseService::error($result['error'] ?? 'Erreur.', 400);
+    }
+} catch (\Exception $e) {
+    LoggerService::error('Participation cancellation error', ['error' => $e->getMessage()]);
+    ResponseService::serverError('Erreur lors de l\'annulation.');
+}

@@ -1,22 +1,30 @@
 <?php
 session_start();
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../classes/VehiculeManager.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../bootstrap.php';
 
 if (!isset($_SESSION['user_id'])) {
-  echo json_encode(['success' => false, 'error' => 'Non authentifié']);
-  exit;
+    ResponseService::unauthorized('Non authentifié.');
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ResponseService::error('Method not allowed', 405);
 }
 
 try {
-  $manager = new VehiculeManager($pdo, (int)$_SESSION['user_id']);
-  $vehicule = $manager->ajouterVehicule($_POST);
-  echo json_encode(['success' => true, 'vehicule' => $vehicule]);
-} catch (InvalidArgumentException $e) {
-  echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-} catch (PDOException $e) {
-  echo json_encode(['success' => false, 'error' => 'Erreur BDD: ' . $e->getMessage()]);
+    $manager = new VehiculeManager($pdo, (int)$_SESSION['user_id']);
+    $result = $manager->ajouterVehicule($_POST);
+
+    if ($result['success']) {
+        ResponseService::success($result['vehicule'] ?? null, $result['message'] ?? 'Véhicule ajouté.', 201);
+    } else {
+        if (isset($result['errors'])) {
+            ResponseService::validationError($result['error'], $result['errors']);
+        }
+        ResponseService::error($result['error'] ?? 'Erreur.', 400);
+    }
+} catch (ValidationException $e) {
+    ResponseService::validationError($e->getMessage(), $e->getErrors());
+} catch (\Exception $e) {
+    LoggerService::error('Vehicle add error', ['error' => $e->getMessage()]);
+    ResponseService::serverError();
 }

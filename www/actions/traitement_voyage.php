@@ -1,24 +1,35 @@
 <?php
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../classes/VoyageManager.php';
+session_start();
+require_once __DIR__ . '/../bootstrap.php';
 
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
-    $manager = new VoyageManager($pdo, (int) $_SESSION['user_id']);
-
-    $result = $manager->creerVoyage([
-        'vehicule_id' => $_POST['vehicule_id'],
-        'depart' => $_POST['depart'],
-        'destination' => $_POST['destination'],
-        'date_depart' => $_POST['date_depart'],
-        'prix' => $_POST['prix']
-    ]);
-
-    echo json_encode($result);
-    exit;
+if (!isset($_SESSION['user_id'])) {
+    ResponseService::unauthorized('Vous devez être connecté.');
 }
 
-echo json_encode(["success" => false, "error" => "Requête invalide."]);
-exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ResponseService::error('Method not allowed', 405);
+}
+
+try {
+    $manager = new VoyageManager($pdo, (int)$_SESSION['user_id']);
+
+    $result = $manager->creerVoyage([
+        'vehicule_id' => $_POST['vehicule_id'] ?? '',
+        'depart' => $_POST['depart'] ?? '',
+        'destination' => $_POST['destination'] ?? '',
+        'date_depart' => $_POST['date_depart'] ?? '',
+        'prix' => $_POST['prix'] ?? ''
+    ]);
+
+    if ($result['success']) {
+        ResponseService::success($result['voyage'] ?? null, $result['message'] ?? 'Trajet créé.', 201);
+    } else {
+        if (isset($result['errors'])) {
+            ResponseService::validationError($result['error'], $result['errors']);
+        }
+        ResponseService::error($result['error'] ?? 'Erreur lors de la création.', 400);
+    }
+} catch (\Exception $e) {
+    LoggerService::error('Trip creation error', ['error' => $e->getMessage()]);
+    ResponseService::serverError('Erreur serveur lors de la création du trajet.');
+}

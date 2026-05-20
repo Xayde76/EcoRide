@@ -1,18 +1,39 @@
 <?php
 session_start();
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../classes/RoleManager.php';
+require_once __DIR__ . '/../bootstrap.php';
 
-header('Content-Type: application/json');
-
-$userId = $_SESSION['user_id'] ?? null;
-$role = $_POST['role'] ?? '';
-
-if (!$userId) {
-    echo json_encode(['success' => false, 'error' => "Utilisateur non authentifié."]);
-    exit;
+if (!isset($_SESSION['user_id'])) {
+    ResponseService::unauthorized('Utilisateur non authentifié.');
 }
 
-$manager = new RoleManager($pdo);
-$response = $manager->updateRole((int)$userId, $role);
-echo json_encode($response);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ResponseService::error('Method not allowed', 405);
+}
+
+$role = $_POST['role'] ?? '';
+$allowedRoles = ['passager', 'chauffeur', 'chauffeur_passager'];
+
+if (!ValidationService::validateInArray($role, $allowedRoles)) {
+    ResponseService::validationError('Rôle invalide.', ['role' => 'Valeur non autorisée.']);
+}
+
+try {
+    $userId = (int)$_SESSION['user_id'];
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM roles_utilisateurs WHERE utilisateur_id = ?");
+    $stmt->execute([$userId]);
+
+    if ($stmt->fetchColumn() > 0) {
+        $stmt = $pdo->prepare("UPDATE roles_utilisateurs SET role = ? WHERE utilisateur_id = ?");
+        $stmt->execute([$role, $userId]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO roles_utilisateurs (utilisateur_id, role) VALUES (?, ?)");
+        $stmt->execute([$userId, $role]);
+    }
+
+    LoggerService::info('User role updated', ['user_id' => $userId, 'role' => $role]);
+    ResponseService::success(['role' => $role], 'Rôle mis à jour avec succès.');
+} catch (\PDOException $e) {
+    LoggerService::error('Role update error', ['error' => $e->getMessage()]);
+    ResponseService::serverError('Erreur lors de la mise à jour du rôle.');
+}

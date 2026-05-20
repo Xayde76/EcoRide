@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /actions/
+Disallow: /pages/user.php
+Disallow: /pages/admin.php
+Disallow: /config.php
+Disallow: /bootstrap.php
+Disallow: /logs/
+Disallow: /services/
+Disallow: /classes/
+Allow: /
+
+Sitemap: https://www.ecoride.fr/sitemap.xml

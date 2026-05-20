@@ -1,21 +1,22 @@
 <?php
-require_once __DIR__ . '/../config.php';
 session_start();
+require_once __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $userId = $_SESSION['user_id'];
 
-// Récupérer le rôle actuel depuis la BDD
 $stmt = $pdo->prepare("SELECT role FROM roles_utilisateurs WHERE utilisateur_id = ?");
 $stmt->execute([$userId]);
 $roleActuel = ($row = $stmt->fetch()) ? $row['role'] : '';
 
-// Récupérer les crédits de l'utilisateur
-$stmtCredits = $pdo->prepare("SELECT credits FROM utilisateurs WHERE id = ?");
-$stmtCredits->execute([$userId]);
-$credits = $stmtCredits->fetchColumn();
+$stmtUser = $pdo->prepare("SELECT nom, email, credits, photo FROM utilisateurs WHERE id = ?");
+$stmtUser->execute([$userId]);
+$userInfo = $stmtUser->fetch();
+$credits  = $userInfo['credits'];
+$userNom  = $userInfo['nom'];
+$userEmail = $userInfo['email'];
+$userPhoto = $userInfo['photo'] ?? null;
 
-// Récupérer les véhicules existants
 $stmtVehicules = $pdo->prepare("SELECT * FROM vehicules WHERE utilisateur_id = ?");
 $stmtVehicules->execute([$userId]);
 $vehicules = $stmtVehicules->fetchAll();
@@ -26,180 +27,317 @@ $vehicules = $stmtVehicules->fetchAll();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profil - EcoRide</title>
+  <title>Mon Espace - EcoRide</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../assets/css/styles.css" />
   <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <?php include '../partials/menu.php'; ?>
+  <?php include __DIR__ . '/../partials/menu.php'; ?>
 
-  <main class="wrapper">
-    <h1 class="hero-title">Mon Espace</h1>
-    <div class="credits-display">Crédits disponibles : <?= htmlspecialchars($credits) ?> 💰</div>
+  <main class="wrapper user-page">
 
-    <section class="user-role">
-      <h2>Choisissez votre rôle</h2>
-      <form id="role-form" autocomplete="off">
-        <label for="role">Je suis :</label>
-        <select name="role" id="role" required>
-          <option value="" disabled <?= $roleActuel === '' ? 'selected' : '' ?>>-- Sélectionnez --</option>
-          <option value="passager" <?= $roleActuel === 'passager' ? 'selected' : '' ?>>Passager</option>
-          <option value="chauffeur" <?= $roleActuel === 'chauffeur' ? 'selected' : '' ?>>Chauffeur</option>
-          <option value="chauffeur_passager" <?= $roleActuel === 'chauffeur_passager' ? 'selected' : '' ?>>Chauffeur / Passager</option>
-        </select>
-      </form>
-      <span id="role-message" style="margin-left:1rem;"></span>
-    </section>
+    <!-- Bannière profil -->
+    <div class="user-banner">
+      <div class="user-banner-identity">
+        <div class="user-avatar user-avatar--photo" id="avatar-wrap">
+          <?php if ($userPhoto): ?>
+            <img src="../images/profil/<?= htmlspecialchars($userPhoto) ?>" alt="Photo de profil" id="avatar-img" class="avatar-img">
+          <?php else: ?>
+            <span id="avatar-fallback">👤</span>
+          <?php endif; ?>
+          <label class="avatar-upload-btn" title="Changer la photo">
+            📷
+            <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+          </label>
+        </div>
+        <div>
+          <h1 id="banner-nom"><?= htmlspecialchars($userNom) ?></h1>
+          <p>Gérez votre profil EcoRide</p>
+        </div>
+      </div>
+      <div class="credits-badge">
+        <span class="credits-badge-icon">💰</span>
+        <div>
+          <div class="credits-badge-amount"><?= htmlspecialchars($credits) ?></div>
+          <div class="credits-badge-label">Crédits</div>
+        </div>
+      </div>
+    </div>
 
-    <section class="chauffeur-info" id="chauffeur-info">
-      <h2>Informations Chauffeur</h2>
-      <h3 id="titre-vehicules" <?= empty($vehicules) ? 'style="display:none;"' : '' ?>>Mes véhicules enregistrés</h3>
-      <div id="vehicules-list">
-        <?php foreach ($vehicules as $v): ?>
-          <div class="vehicule" data-id="<?= $v['id'] ?>">
-            <p><strong><?= htmlspecialchars($v['marque']) ?> <?= htmlspecialchars($v['modele']) ?></strong> (<?= htmlspecialchars($v['couleur']) ?>) - <?= htmlspecialchars($v['plaque']) ?></p>
-            <button class="btn-delete supprimer-btn" data-id="<?= $v['id'] ?>">Supprimer</button>
+    <!-- Grille principale -->
+    <div class="user-layout">
+
+      <!-- Colonne gauche : actions -->
+      <div class="user-left-col">
+
+        <!-- Modifier profil -->
+        <div class="user-card">
+          <h2>✏️ Mon profil</h2>
+          <form id="profil-form" autocomplete="off">
+            <div class="profil-form-group">
+              <label for="profil-nom">Nom complet</label>
+              <input type="text" id="profil-nom" name="nom" value="<?= htmlspecialchars($userNom) ?>" required maxlength="255" />
+            </div>
+            <div class="profil-form-group">
+              <label for="profil-email">Email</label>
+              <input type="email" id="profil-email" name="email" value="<?= htmlspecialchars($userEmail) ?>" required />
+            </div>
+            <div class="profil-form-group">
+              <label for="profil-password">Nouveau mot de passe <small>(laisser vide pour ne pas changer)</small></label>
+              <input type="password" id="profil-password" name="password" placeholder="••••••" minlength="6" />
+            </div>
+            <button type="submit" class="btn btn-profil-save">Enregistrer</button>
+            <span id="profil-message"></span>
+          </form>
+        </div>
+
+        <!-- Rôle -->
+        <div class="user-card">
+          <h2>🎭 Mon rôle</h2>
+          <div class="role-form-wrapper">
+            <form id="role-form" autocomplete="off">
+              <label for="role">Je suis :</label>
+              <select name="role" id="role" required>
+                <option value="" disabled <?= $roleActuel === '' ? 'selected' : '' ?>>-- Sélectionnez --</option>
+                <option value="passager" <?= $roleActuel === 'passager' ? 'selected' : '' ?>>Passager</option>
+                <option value="chauffeur" <?= $roleActuel === 'chauffeur' ? 'selected' : '' ?>>Chauffeur</option>
+                <option value="chauffeur_passager" <?= $roleActuel === 'chauffeur_passager' ? 'selected' : '' ?>>Chauffeur / Passager</option>
+              </select>
+            </form>
+            <span id="role-message"></span>
           </div>
-        <?php endforeach; ?>
-      </div>
-
-      <p id="message-ajout" <?= empty($vehicules) ? 'style="display:none;"' : '' ?>>Vous pouvez ajouter un nouveau véhicule si besoin :</p>
-      <p id="message-aucun-vehicule" <?= !empty($vehicules) ? 'style="display:none;"' : '' ?>>
-        <strong>Veuillez enregistrer un véhicule pour pouvoir utiliser le service en tant que chauffeur.</strong>
-      </p>
-
-      <form id="form-ajout-vehicule">
-        <input type="text" name="plaque" placeholder="Plaque d'immatriculation" required>
-        <input type="date" name="date_immat" required>
-        <input type="text" name="modele" placeholder="Modèle" required>
-        <input type="text" name="marque" placeholder="Marque" required>
-        <input type="text" name="couleur" placeholder="Couleur" required>
-        <input type="number" name="places" placeholder="Places disponibles" min="1" required>
-        <label for="type_vehicule"><strong>Type de véhicule</strong></label>
-        <select name="type_vehicule" id="type_vehicule" required>
-          <option value="" disabled selected>-- Sélectionnez le type --</option>
-          <option value="essence">Essence</option>
-          <option value="diesel">Diesel</option>
-          <option value="électrique">Électrique</option>
-          <option value="hybride">Hybride</option>
-        </select>
-        <h3>Préférences</h3>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="prefs[]" value="fumeur"> Accepte fumeurs</label>
         </div>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="prefs[]" value="animaux"> Accepte animaux</label>
+
+        <!-- Infos chauffeur -->
+        <div class="user-card" id="chauffeur-info" style="display:none;">
+          <h2>🚗 Informations Chauffeur</h2>
+
+          <h3 id="titre-vehicules" <?= empty($vehicules) ? 'style="display:none;"' : '' ?>>Mes véhicules</h3>
+          <div id="vehicules-list">
+            <?php foreach ($vehicules as $v): ?>
+              <div class="vehicule" data-id="<?= $v['id'] ?>">
+                <div class="vehicule-info">
+                  <strong><?= htmlspecialchars($v['marque']) ?> <?= htmlspecialchars($v['modele']) ?></strong>
+                  <span><?= htmlspecialchars($v['couleur']) ?> · <?= htmlspecialchars($v['plaque']) ?></span>
+                </div>
+                <button class="btn-delete supprimer-btn" data-id="<?= $v['id'] ?>">Supprimer</button>
+              </div>
+            <?php endforeach; ?>
+          </div>
+
+          <p id="message-aucun-vehicule" class="info-msg warning" <?= !empty($vehicules) ? 'style="display:none;"' : '' ?>>
+            Enregistrez un véhicule pour utiliser le service en tant que chauffeur.
+          </p>
+
+          <!-- Formulaire d'ajout dépliable -->
+          <span id="message-ajout" style="display:none;"></span>
+          <details class="add-vehicle-details">
+            <summary>➕ Ajouter un véhicule</summary>
+            <form id="form-ajout-vehicule" class="vehicle-form">
+              <div class="form-row">
+                <input type="text" name="plaque" placeholder="Plaque d'immatriculation" required>
+                <input type="date" name="date_immat" required>
+              </div>
+              <div class="form-row">
+                <input type="text" name="marque" placeholder="Marque" required>
+                <input type="text" name="modele" placeholder="Modèle" required>
+              </div>
+              <div class="form-row">
+                <input type="text" name="couleur" placeholder="Couleur" required>
+                <input type="number" name="places" placeholder="Nb. places" min="1" max="9" required>
+              </div>
+              <select name="type_vehicule" id="type_vehicule" required>
+                <option value="" disabled selected>-- Type de véhicule --</option>
+                <option value="essence">Essence</option>
+                <option value="diesel">Diesel</option>
+                <option value="electrique">Électrique</option>
+                <option value="hybride">Hybride</option>
+              </select>
+              <div class="prefs-group">
+                <p class="prefs-title">Préférences</p>
+                <label class="checkbox-label"><input type="checkbox" name="prefs[]" value="fumeur"> Fumeurs acceptés</label>
+                <label class="checkbox-label"><input type="checkbox" name="prefs[]" value="animaux"> Animaux acceptés</label>
+                <input type="text" name="prefs_autres" placeholder="Autres préférences...">
+              </div>
+              <button type="submit">Ajouter le véhicule</button>
+              <div id="message-ajout-vehicule" style="display:none;"></div>
+            </form>
+          </details>
         </div>
-        <input type="text" name="prefs_autres" placeholder="Autres préférences...">
-        <button type="submit">Ajouter un véhicule</button>
-      </form>
-    </section>
 
-    <section class="voyage-creation" id="voyage-creation" style="display: none;">
-      <h3>Créer un nouveau covoiturage</h3>
-      <form id="form-voyage">
-        <label for="vehicule">Véhicule utilisé :</label>
-        <select name="vehicule_id" required>
-          <?php foreach ($vehicules as $v): ?>
-            <option value="<?= $v['id'] ?>">
-              <?= htmlspecialchars($v['marque']) ?> <?= htmlspecialchars($v['modele']) ?> - <?= htmlspecialchars($v['plaque']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <input type="text" name="depart" placeholder="Ville de départ" required>
-        <input type="text" name="destination" placeholder="Ville d’arrivée" required>
-        <input type="datetime-local" name="date_depart" id="date_depart" required>
-        <input type="number" name="prix" placeholder="Prix (€)" step="1" min="2" required>
-        <button type="submit">Créer le covoiturage</button>
-      </form>
-      <div id="message-voyage" style="display: none; margin-bottom: 1rem; text-align:center; font-weight:bold;"></div>
-    </section>
+        <!-- Création de voyage -->
+        <div class="user-card" id="voyage-creation" style="display:none;">
+          <h2>➕ Nouveau covoiturage</h2>
+          <form id="form-voyage">
+            <label class="field-label">Véhicule utilisé</label>
+            <select name="vehicule_id" id="vehicule-select" required>
+              <?php foreach ($vehicules as $v): ?>
+                <option value="<?= $v['id'] ?>">
+                  <?= htmlspecialchars($v['marque']) ?> <?= htmlspecialchars($v['modele']) ?> · <?= htmlspecialchars($v['plaque']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <div class="form-row">
+              <input type="text" name="depart" placeholder="Ville de départ" required>
+              <input type="text" name="destination" placeholder="Ville d'arrivée" required>
+            </div>
+            <div class="form-row">
+              <input type="datetime-local" name="date_depart" id="date_depart" required>
+              <input type="number" name="prix" placeholder="Prix (€)" step="1" min="2" required>
+            </div>
+            <button type="submit">Créer le covoiturage</button>
+          </form>
+          <div id="message-voyage" style="display:none;"></div>
+        </div>
 
-    <section class="historique-covoiturages" id="historique-covoiturages">
-      <h2>Historique de mes covoiturages</h2>
-      <div id="message-voyage" style="text-align:center; color: green; font-weight: bold; margin-bottom: 1rem;"></div>
-      <?php
-      $aujourdHui = date('Y-m-d');
-      $stmtConducteur = $pdo->prepare("SELECT * FROM covoiturage WHERE utilisateur_id = ? ORDER BY date_depart DESC");
-      $stmtConducteur->execute([$userId]);
-      $covoituragesConducteur = $stmtConducteur->fetchAll();
-      $stmtPassager = $pdo->prepare("SELECT c.* FROM participation p JOIN covoiturage c ON p.covoiturage_id = c.covoiturage_id WHERE p.utilisateur_id = ? ORDER BY c.date_depart DESC");
-      $stmtPassager->execute([$userId]);
-      $covoituragesPassager = $stmtPassager->fetchAll();
-      ?>
-      <div class="historique-bloc">
-        <h3>En tant que conducteur</h3>
-        <?php if (empty($covoituragesConducteur)): ?>
-          <p>Aucun covoiturage créé.</p>
-        <?php else: ?>
-          <ul id="historique-conducteur">
-            <?php foreach ($covoituragesConducteur as $c): ?>
-              <?php
-              $statutClass = '';
-              if ($c['statut'] === 'annulé') {
-                $statutClass = 'annule';
-              } elseif ($c['date_depart'] < $aujourdHui) {
-                $statutClass = 'passe';
-              }
+      </div><!-- /user-left-col -->
+
+      <!-- Colonne droite : historique -->
+      <div class="user-right-col">
+        <div class="user-card" id="historique-covoiturages">
+          <h2>📋 Mes covoiturages</h2>
+
+          <?php
+          $aujourdHui = date('Y-m-d');
+          $stmtConducteur = $pdo->prepare("SELECT * FROM covoiturage WHERE utilisateur_id = ? AND statut != 'annule' ORDER BY date_depart DESC");
+          $stmtConducteur->execute([$userId]);
+          $covoituragesConducteur = $stmtConducteur->fetchAll();
+          $stmtPassager = $pdo->prepare("SELECT c.*, p.statut AS participation_statut FROM participation p JOIN covoiturage c ON p.covoiturage_id = c.covoiturage_id WHERE p.utilisateur_id = ? AND c.statut != 'annule' ORDER BY c.date_depart DESC");
+          $stmtPassager->execute([$userId]);
+          $covoituragesPassager = $stmtPassager->fetchAll();
+          ?>
+
+          <!-- Conducteur -->
+          <div class="historique-bloc">
+            <div class="historique-header">🚘 En tant que conducteur</div>
+            <p id="empty-conducteur" class="empty-msg" <?= !empty($covoituragesConducteur) ? 'style="display:none"' : '' ?>>
+              Aucun covoiturage créé pour l'instant.
+            </p>
+            <ul id="historique-conducteur" <?= empty($covoituragesConducteur) ? 'style="display:none"' : '' ?>>
+              <?php foreach ($covoituragesConducteur as $c):
+                $isPast    = $c['date_depart'] < $aujourdHui;
+                $isToday   = $c['date_depart'] === $aujourdHui;
+                $canStart  = $c['statut'] === 'disponible' && ($isToday || $isPast);
+                $isRunning = $c['statut'] === 'en_cours';
+                $isTermine = $c['statut'] === 'termine';
+
+                if ($isRunning) {
+                    $itemClass = ''; $badgeClass = 'en-cours'; $badgeLabel = 'En cours';
+                } elseif ($isTermine) {
+                    $itemClass = 'passe'; $badgeClass = 'passe'; $badgeLabel = 'Terminé';
+                } elseif ($isPast) {
+                    $itemClass = 'passe'; $badgeClass = 'passe'; $badgeLabel = 'Terminé';
+                } else {
+                    $itemClass = ''; $badgeClass = $c['statut']; $badgeLabel = ucfirst($c['statut']);
+                }
               ?>
-              <li class="<?= $statutClass ?>">
-                <div>
-                  <strong><?= htmlspecialchars($c['lieu_depart']) ?> → <?= htmlspecialchars($c['lieu_arrivee']) ?></strong><br>
-                  <span>📅 le <?= date('d/m/Y', strtotime($c['date_depart'])) ?></span><br>
-                  <span>🛈 Statut : <?= htmlspecialchars($c['statut']) ?></span>
-                </div>
-                <?php if ($c['statut'] === 'disponible'): ?>
-                  <form class="annuler-covoiturage-form" data-id="<?= $c['covoiturage_id'] ?>" data-type="conducteur">
-                    <input type="hidden" name="id" value="<?= $c['covoiturage_id'] ?>">
-                    <button type="submit" class="btn-delete">Annuler</button>
-                  </form>
-                <?php endif; ?>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-        <?php endif; ?>
-      </div>
+                <li class="trip-item <?= $itemClass ?>">
+                  <a href="detail.php?id=<?= $c['covoiturage_id'] ?>" class="trip-info-link">
+                    <div class="trip-info">
+                      <div class="trip-route"><?= htmlspecialchars($c['lieu_depart']) ?> → <?= htmlspecialchars($c['lieu_arrivee']) ?></div>
+                      <div class="trip-meta">📅 <?= date('d/m/Y', strtotime($c['date_depart'])) ?></div>
+                      <span class="statut-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
+                    </div>
+                  </a>
+                  <?php if ($c['statut'] === 'disponible' && !$isPast && !$isToday): ?>
+                    <form class="annuler-covoiturage-form" data-id="<?= $c['covoiturage_id'] ?>" data-type="conducteur">
+                      <input type="hidden" name="id" value="<?= $c['covoiturage_id'] ?>">
+                      <button type="submit" class="btn-annuler">Supprimer</button>
+                    </form>
+                  <?php elseif ($canStart): ?>
+                    <button class="btn-demarrer" data-id="<?= $c['covoiturage_id'] ?>">▶ Démarrer</button>
+                  <?php elseif ($isRunning): ?>
+                    <button class="btn-terminer" data-id="<?= $c['covoiturage_id'] ?>">🏁 Arrivée à destination</button>
+                  <?php endif; ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
 
-      <div class="historique-bloc">
-        <h3>En tant que passager</h3>
-        <?php if (empty($covoituragesPassager)): ?>
-          <p>Aucune participation à un covoiturage.</p>
-        <?php else: ?>
-          <ul id="historique-passager">
-            <?php foreach ($covoituragesPassager as $c): ?>
-              <?php
-              $statutClass = '';
-              if ($c['statut'] === 'annulé') {
-                $statutClass = 'annule';
-              } elseif ($c['date_depart'] < $aujourdHui) {
-                $statutClass = 'passe';
-              }
+          <!-- Passager -->
+          <div class="historique-bloc">
+            <div class="historique-header">🎒 En tant que passager</div>
+            <p id="empty-passager" class="empty-msg" <?= !empty($covoituragesPassager) ? 'style="display:none"' : '' ?>>
+              Aucune participation pour l'instant.
+            </p>
+            <ul id="historique-passager" <?= empty($covoituragesPassager) ? 'style="display:none"' : '' ?>>
+              <?php foreach ($covoituragesPassager as $c):
+                $isPast          = $c['date_depart'] < $aujourdHui;
+                $isTermine       = $c['statut'] === 'termine';
+                $isRunning       = $c['statut'] === 'en_cours';
+                $partStatut      = $c['participation_statut'] ?? 'en_attente';
+                $needsValidation = $isTermine && $partStatut === 'en_attente';
+
+                if ($isRunning) {
+                    $itemClass = ''; $badgeClass = 'en-cours'; $badgeLabel = 'En cours';
+                } elseif ($isTermine && $partStatut === 'validee') {
+                    $itemClass = 'passe'; $badgeClass = 'validee'; $badgeLabel = 'Validé ✓';
+                } elseif ($isTermine && $partStatut === 'litige') {
+                    $itemClass = 'passe'; $badgeClass = 'litige'; $badgeLabel = 'Litige en cours';
+                } elseif ($isTermine) {
+                    $itemClass = ''; $badgeClass = 'en-cours'; $badgeLabel = 'À valider';
+                } elseif ($isPast) {
+                    $itemClass = 'passe'; $badgeClass = 'passe'; $badgeLabel = 'Terminé';
+                } else {
+                    $itemClass = ''; $badgeClass = $c['statut']; $badgeLabel = ucfirst($c['statut']);
+                }
               ?>
-              <li class="<?= $statutClass ?>">
-                <div>
-                  <strong><?= htmlspecialchars($c['lieu_depart']) ?> → <?= htmlspecialchars($c['lieu_arrivee']) ?></strong><br>
-                  <span>📅 le <?= date('d/m/Y', strtotime($c['date_depart'])) ?></span><br>
-                  <span>🛈 Statut : <?= htmlspecialchars($c['statut']) ?></span>
-                </div>
-                <?php if ($c['statut'] === 'disponible'): ?>
-                  <form class="annuler-covoiturage-form" data-id="<?= $c['covoiturage_id'] ?>" data-type="passager">
-                    <input type="hidden" name="id" value="<?= $c['covoiturage_id'] ?>">
-                    <button type="submit" class="btn-delete">Annuler</button>
-                  </form>
-                <?php endif; ?>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-        <?php endif; ?>
-      </div>
-    </section>
+                <li class="trip-item <?= $itemClass ?>">
+                  <a href="detail.php?id=<?= $c['covoiturage_id'] ?>" class="trip-info-link">
+                    <div class="trip-info">
+                      <div class="trip-route"><?= htmlspecialchars($c['lieu_depart']) ?> → <?= htmlspecialchars($c['lieu_arrivee']) ?></div>
+                      <div class="trip-meta">📅 <?= date('d/m/Y', strtotime($c['date_depart'])) ?></div>
+                      <span class="statut-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
+                    </div>
+                  </a>
+                  <?php if ($c['statut'] === 'disponible' && !$isPast): ?>
+                    <form class="annuler-covoiturage-form" data-id="<?= $c['covoiturage_id'] ?>" data-type="passager">
+                      <input type="hidden" name="id" value="<?= $c['covoiturage_id'] ?>">
+                      <button type="submit" class="btn-annuler">Supprimer</button>
+                    </form>
+                  <?php elseif ($needsValidation): ?>
+                    <div class="validation-panel">
+                      <div class="vp-btns">
+                        <button class="btn-ok-trajet" data-id="<?= $c['covoiturage_id'] ?>">👍 Tout s'est bien passé</button>
+                        <button class="btn-prob-trajet" data-id="<?= $c['covoiturage_id'] ?>">⚠️ Signaler un problème</button>
+                      </div>
+                      <form class="vp-avis-form" data-id="<?= $c['covoiturage_id'] ?>" style="display:none;">
+                        <p class="vp-label">Laisser un avis (optionnel)</p>
+                        <div class="vp-stars">
+                          <span class="vp-star" data-val="1">★</span>
+                          <span class="vp-star" data-val="2">★</span>
+                          <span class="vp-star" data-val="3">★</span>
+                          <span class="vp-star" data-val="4">★</span>
+                          <span class="vp-star" data-val="5">★</span>
+                        </div>
+                        <input type="hidden" class="vp-note-val" value="">
+                        <textarea class="vp-commentaire" placeholder="Votre commentaire..."></textarea>
+                        <button type="submit" class="btn-submit-ok">Confirmer la validation</button>
+                      </form>
+                      <form class="vp-prob-form" data-id="<?= $c['covoiturage_id'] ?>" style="display:none;">
+                        <textarea class="vp-prob-commentaire" placeholder="Décrivez le problème rencontré..." required></textarea>
+                        <button type="submit" class="btn-submit-prob">Envoyer le signalement</button>
+                      </form>
+                    </div>
+                  <?php endif; ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+
+        </div>
+      </div><!-- /user-right-col -->
+
+    </div><!-- /user-layout -->
   </main>
 
-  <?php include '../partials/footer.php'; ?>
+  <?php include __DIR__ . '/../partials/footer.php'; ?>
   <div id="injection-modal"></div>
-  <?php include '../includes/layout.php'; ?>
+  <?php include __DIR__ . '/../includes/layout.php'; ?>
   <script src="../assets/js/modal-connexion.js"></script>
   <script src="../assets/js/user-espace.js"></script>
+  <script src="../assets/js/menu-toggle.js" defer></script>
 </body>
 </html>

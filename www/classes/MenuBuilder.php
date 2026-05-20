@@ -7,7 +7,7 @@ class MenuBuilder {
     $links = [
       ["label" => "Accueil", "href" => $base . "/index.php"],
       ["label" => "Covoiturage", "href" => $base . "/pages/covoiturage.php"],
-      ["label" => "Contact", "href" => "/pages/contact.php"]
+      ["label" => "Contact", "href" => $base . "/pages/contact.php"]
     ];
 
     if (isset($_SESSION['user_id'])) {
@@ -17,6 +17,9 @@ class MenuBuilder {
 
       if ($roleId === 1) {
         $links[] = ["label" => "Admin", "href" => $base . "/pages/admin.php"];
+      }
+      if ($roleId === 2) {
+        $links[] = ["label" => "Espace employé", "href" => $base . "/pages/employe.php"];
       }
 
       $links[] = ["label" => "Déconnexion", "href" => $base . "/actions/logout.php", "class" => "btn-logout"];
