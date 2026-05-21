@@ -10,7 +10,7 @@ require_once __DIR__ . '/../bootstrap.php';
     <title>Mentions Légales | EcoRide</title>
     <meta name="description" content="Mentions légales d'EcoRide : informations sur l'éditeur, l'hébergeur, la propriété intellectuelle et la protection des données personnelles (RGPD).">
     <meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="https://ecoride-production-2313.up.railway.app/pages/mentions-legales.php">
+    <link rel="canonical" href="https://ecoride-production-48f6.up.railway.app/pages/mentions-legales.php">
     <link rel="stylesheet" href="../assets/css/styles.css" />
     <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&display=swap" rel="stylesheet" />

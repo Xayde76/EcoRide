@@ -1,14 +1,8 @@
 <?php
-session_start();
 require_once __DIR__ . '/../bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ' . BASE_URL . '/pages/contact.php');
-    exit;
-}
-
-if (!CsrfService::validateToken($_POST['csrf_token'] ?? '')) {
-    header('Location: ' . BASE_URL . '/pages/contact.php?error=invalid');
     exit;
 }
 
