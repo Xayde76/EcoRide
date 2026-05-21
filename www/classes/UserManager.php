@@ -79,6 +79,10 @@ class UserManager extends BaseManager {
             $this->execute($stmt, [$nom, $email, $hashedPassword]);
 
             $userId = $this->lastInsertId();
+
+            $stmtRole = $this->prepare("INSERT INTO roles_utilisateurs (utilisateur_id, role) VALUES (?, 'passager')");
+            $this->execute($stmtRole, [$userId]);
+
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_nom'] = $nom;
             $_SESSION['role_id'] = 3;
