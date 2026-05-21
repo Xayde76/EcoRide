@@ -214,6 +214,7 @@ main {
   padding: 0.7rem;
   border: none;
   border-radius: 5px;
+  background: white;
 }
 
 .search-box button {
@@ -426,7 +427,7 @@ footer a:hover {
   box-sizing: border-box;
 }
 
-/* Wrapper simulant le placeholder pour input[type="date"] sur mobile */
+/* Wrapper simulant le placeholder pour input[type="date"] */
 .date-wrapper {
   position: relative;
   flex: 1 1 150px;
@@ -441,9 +442,17 @@ footer a:hover {
   font-size: 0.93rem;
   pointer-events: none;
   user-select: none;
+  z-index: 2;
 }
 .date-wrapper:focus-within .date-ph,
 .date-wrapper.has-value .date-ph {
+  display: none;
+}
+/* Cache le texte natif jj/mm/aaaa et l'icône calendrier quand vide */
+.date-wrapper:not(.has-value):not(:focus-within) input[type="date"] {
+  color: transparent;
+}
+.date-wrapper:not(.has-value):not(:focus-within) input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
 }
 
@@ -2283,6 +2292,11 @@ footer a:hover {
   .search-box button {
     width: 100%;
     flex: unset;
+  }
+
+  .search-box .date-wrapper {
+    flex: unset;
+    width: 100%;
   }
 
   /* covoiturage */
