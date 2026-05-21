@@ -33,4 +33,9 @@ COPY ./www /var/www/html
 RUN mkdir -p /var/www/html/images/profil \
     && chown -R www-data:www-data /var/www/html
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 EXPOSE 80
