@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <header>
   <div class="logo">
-    <img src="<?= BASE_URL ?>/images/logo-ecoride.png" alt="Logo" />
+    <a href="/index.php"><img src="<?= BASE_URL ?>/images/logo-ecoride.png" alt="Logo" /></a>
     <span class="title">EcoRide</span>
   </div>
 
