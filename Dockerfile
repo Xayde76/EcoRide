@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
+    && php -r "unlink('composer-setup.php');"
+
 # Extension MongoDB
 RUN pecl install mongodb \
     && echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
@@ -32,6 +37,10 @@ COPY php/production.ini /usr/local/etc/php/conf.d/production.ini
 
 # Fichiers de l'application
 COPY ./www /var/www/html
+
+# Dépendances PHP (PHPMailer) — installées dans www/vendor/
+COPY composer.json composer.lock /var/www/html/
+RUN composer install --no-dev --no-interaction --working-dir=/var/www/html
 
 # Dossier uploads
 RUN mkdir -p /var/www/html/images/profil \

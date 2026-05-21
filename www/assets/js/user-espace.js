@@ -415,11 +415,13 @@ class EspaceUtilisateur {
     const li = document.createElement("li");
     li.className = "trip-item disponible";
     li.innerHTML = `
-      <div class="trip-info">
-        <div class="trip-route">${voyage.lieu_depart} → ${voyage.lieu_arrivee}</div>
-        <div class="trip-meta">📅 ${new Date(voyage.date_depart).toLocaleDateString('fr-FR')}</div>
-        <span class="statut-badge disponible">Disponible</span>
-      </div>
+      <a href="detail.php?id=${voyage.id}" class="trip-info-link">
+        <div class="trip-info">
+          <div class="trip-route">${voyage.lieu_depart} → ${voyage.lieu_arrivee}</div>
+          <div class="trip-meta">📅 ${new Date(voyage.date_depart).toLocaleDateString('fr-FR')}</div>
+          <span class="statut-badge disponible">Disponible</span>
+        </div>
+      </a>
       <form class="annuler-covoiturage-form" data-id="${voyage.id}" data-type="conducteur">
         <input type="hidden" name="id" value="${voyage.id}">
         <button type="submit" class="btn-annuler">Supprimer</button>
@@ -431,4 +433,20 @@ class EspaceUtilisateur {
 }
 
 // Initialisation
-window.addEventListener("DOMContentLoaded", () => new EspaceUtilisateur());
+window.addEventListener("DOMContentLoaded", () => {
+  new EspaceUtilisateur();
+
+  const flash = sessionStorage.getItem("flash_success");
+  if (flash) {
+    sessionStorage.removeItem("flash_success");
+    const toast = document.createElement("div");
+    toast.className = "flash-toast flash-toast--success";
+    toast.textContent = flash;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add("flash-toast--visible"), 50);
+    setTimeout(() => {
+      toast.classList.remove("flash-toast--visible");
+      setTimeout(() => toast.remove(), 400);
+    }, 4000);
+  }
+});

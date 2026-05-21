@@ -410,6 +410,17 @@ footer a:hover {
   padding: 0.7rem;
   border: none;
   border-radius: 5px;
+  box-sizing: border-box;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.93rem;
+  color: #333;
+  background: white;
+}
+
+.covoiturage-search input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
 }
 
 .covoiturage-search button {
@@ -711,17 +722,25 @@ footer a:hover {
 
 /* Horaires */
 .detail-times {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0 1rem;
   padding-bottom: 1.25rem;
   border-bottom: 1px solid #edf2ed;
   margin-bottom: 1.25rem;
 }
 
-.detail-time-hour {
+.detail-time-stop {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.detail-time-stop--right {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .time-value {
@@ -729,6 +748,11 @@ footer a:hover {
   font-weight: 700;
   color: #1a1a1a;
   line-height: 1;
+}
+
+.time-value--empty {
+  color: #aaa;
+  font-weight: 400;
 }
 
 .detail-time-route {
@@ -859,6 +883,9 @@ footer a:hover {
   border-radius: 8px;
   transition: background 0.2s, color 0.2s;
   white-space: nowrap;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .detail-retour-btn:hover {
@@ -1278,6 +1305,15 @@ footer a:hover {
   background: #f8fbf8;
   color: var(--text-dark);
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.user-card input[type="date"],
+.user-card input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+  color: var(--text-dark);
 }
 
 .user-card input:focus,
@@ -1312,6 +1348,21 @@ footer a:hover {
   font-weight: 600;
   color: #555;
   margin-bottom: 0.3rem;
+}
+
+.field-label-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.field-optional {
+  font-weight: 400;
+  color: #999;
+  font-size: 0.8rem;
 }
 
 /* Lignes de formulaire 2 colonnes */
@@ -2230,3 +2281,27 @@ footer a:hover {
 }
 
 
+
+/* Toast de confirmation */
+.flash-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(1rem);
+  background: #2e7d32;
+  color: white;
+  padding: 0.85rem 1.75rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 9999;
+  white-space: nowrap;
+}
+
+.flash-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

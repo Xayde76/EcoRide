@@ -14,11 +14,13 @@ try {
     $manager = new VoyageManager($pdo, (int)$_SESSION['user_id']);
 
     $result = $manager->creerVoyage([
-        'vehicule_id' => $_POST['vehicule_id'] ?? '',
-        'depart' => $_POST['depart'] ?? '',
-        'destination' => $_POST['destination'] ?? '',
-        'date_depart' => $_POST['date_depart'] ?? '',
-        'prix' => $_POST['prix'] ?? ''
+        'vehicule_id'   => $_POST['vehicule_id']   ?? '',
+        'depart'        => $_POST['depart']         ?? '',
+        'destination'   => $_POST['destination']    ?? '',
+        'date_depart'   => $_POST['date_depart']    ?? '',
+        'heure_depart'  => $_POST['heure_depart']   ?? '',
+        'heure_arrivee' => $_POST['heure_arrivee']  ?? null,
+        'prix'          => $_POST['prix']           ?? ''
     ]);
 
     if ($result['success']) {

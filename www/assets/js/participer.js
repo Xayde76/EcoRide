@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.success) {
       messageEl.style.color = "green";
       messageEl.textContent = data.message;
+      sessionStorage.setItem("flash_success", data.message || "Participation confirmée !");
       setTimeout(() => {
         location.href = "user.php#historique-covoiturages";
       }, 1500);

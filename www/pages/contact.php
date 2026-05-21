@@ -42,7 +42,7 @@ require_once __DIR__ . '/../bootstrap.php';
       <?php if (isset($_GET['success'])): ?>
         <p class="contact-msg contact-msg--success">Votre message a été envoyé avec succès !</p>
       <?php elseif (isset($_GET['error']) && $_GET['error'] === 'invalid'): ?>
-        <p class="contact-msg contact-msg--error">Veuillez remplir tous les champs correctement.</p>
+        <p class="contact-msg contact-msg--error">Veuillez remplir tous les champs (email valide, message d'au moins 2 caractères).</p>
       <?php elseif (isset($_GET['error']) && $_GET['error'] === 'send'): ?>
         <p class="contact-msg contact-msg--error">Une erreur est survenue lors de l'envoi. Veuillez réessayer.</p>
       <?php endif; ?>
@@ -63,7 +63,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
       <div class="contact-info">
         <h2>Nos coordonnées</h2>
-        <p><strong>Email :</strong> <a href="mailto:contact@ecoride.fr">contact@ecoride.fr</a></p>
+        <p><strong>Email :</strong> <a href="mailto:contact.ecoride76@gmail.com">contact.ecoride76@gmail.com</a></p>
         <p><strong>Adresse :</strong> 123 rue des Transports, 75000 Paris, France</p>
         <p><strong>Téléphone :</strong> 0102030405</p>
       </div>

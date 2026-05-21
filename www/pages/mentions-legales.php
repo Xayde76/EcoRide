@@ -35,7 +35,7 @@ require_once __DIR__ . '/../bootstrap.php';
         <h2>Éditeur du site</h2>
         <p><strong>Nom :</strong> EcoRide</p>
         <p><strong>Adresse :</strong> 123 rue des Transports, 75000 Paris, France</p>
-        <p><strong>Email :</strong> contact@ecoride.fr</p>
+        <p><strong>Email :</strong> contact.ecoride76@gmail.com</p>
         <p><strong>Directeur de publication :</strong> José Leclerc</p>
 
         <h2>Hébergement</h2>
@@ -55,7 +55,7 @@ require_once __DIR__ . '/../bootstrap.php';
           Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un
           droit d'accès, de rectification, de suppression et d'opposition aux données personnelles vous
           concernant. Pour exercer ce droit, veuillez nous contacter à :
-          <strong>contact@ecoride.fr</strong>
+          <strong>contact.ecoride76@gmail.com</strong>
         </p>
 
         <h2>Cookies</h2>

@@ -16,8 +16,13 @@ class VoyageManager extends BaseManager {
                 $errors['vehicule_id'] = 'Véhicule invalide.';
             }
 
-            if (!isset($data['date_depart']) || !ValidationService::validateDate($data['date_depart'])) {
-                $errors['date_depart'] = 'Date invalide ou date passée.';
+            $dateValide = !empty($data['date_depart']) && \DateTime::createFromFormat('Y-m-d', $data['date_depart']) !== false;
+            if (!$dateValide) {
+                $errors['date_depart'] = 'Date invalide.';
+            }
+
+            if (empty($data['heure_depart'])) {
+                $errors['heure_depart'] = 'Heure de départ requise.';
             }
 
             if (!isset($data['depart']) || !ValidationService::validateString($data['depart'], 1, 255)) {
@@ -46,17 +51,19 @@ class VoyageManager extends BaseManager {
                 return ['success' => false, 'error' => 'Véhicule introuvable.'];
             }
 
-            $date = date('Y-m-d', strtotime($data['date_depart']));
-            $heure = date('H:i:s', strtotime($data['date_depart']));
+            $date  = $data['date_depart'];
+            $heure = $data['heure_depart'];
 
             $this->beginTransaction();
+
+            $heureArrivee = !empty($data['heure_arrivee']) ? $data['heure_arrivee'] : null;
 
             $stmt = $this->prepare("
                 INSERT INTO covoiturage (
                     utilisateur_id, vehicule_id, date_depart, heure_depart,
-                    lieu_depart, lieu_arrivee, nb_place, prix_personne,
+                    heure_arrivee, lieu_depart, lieu_arrivee, nb_place, prix_personne,
                     statut, type_vehicule
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'disponible', ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'disponible', ?)
             ");
 
             $this->execute($stmt, [
@@ -64,6 +71,7 @@ class VoyageManager extends BaseManager {
                 $vehiculeId,
                 $date,
                 $heure,
+                $heureArrivee,
                 $data['depart'],
                 $data['destination'],
                 $vehicule['places'],

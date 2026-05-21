@@ -70,7 +70,7 @@ $avis = $stmtAvis->fetchAll();
           <p>le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> · <?= (int)$trajet['prix_personne'] ?> crédits</p>
         </div>
       </div>
-      <a href="covoiturage.php" class="detail-retour-btn">← Retour</a>
+      <button onclick="history.back()" class="detail-retour-btn">← Retour</button>
     </div>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -89,15 +89,20 @@ $avis = $stmtAvis->fetchAll();
         <!-- Horaires -->
         <div class="user-card detail-trip-card">
           <div class="detail-times">
-            <div class="detail-time-hour">
+            <div class="detail-time-stop">
               <span class="time-value"><?= date('H\hi', strtotime($trajet['heure_depart'])) ?></span>
-            </div>
-            <div class="detail-time-route">
               <span class="time-city"><?= htmlspecialchars($trajet['lieu_depart']) ?></span>
-              <div class="detail-time-line">
-                <div class="detail-time-bar"></div>
-                <span class="detail-time-arrow">→</span>
-              </div>
+            </div>
+            <div class="detail-time-line">
+              <div class="detail-time-bar"></div>
+              <span class="detail-time-arrow">→</span>
+            </div>
+            <div class="detail-time-stop detail-time-stop--right">
+              <?php if (!empty($trajet['heure_arrivee'])): ?>
+                <span class="time-value"><?= date('H\hi', strtotime($trajet['heure_arrivee'])) ?></span>
+              <?php else: ?>
+                <span class="time-value time-value--empty">—</span>
+              <?php endif; ?>
               <span class="time-city"><?= htmlspecialchars($trajet['lieu_arrivee']) ?></span>
             </div>
           </div>

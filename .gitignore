@@ -6,6 +6,7 @@ mail-config.php
 /data/mongodb/
 /dump/
 /vendor/
+www/vendor/
 
 # Ignorer les fichiers système et temporaires
 *.log

@@ -183,10 +183,24 @@ $vehicules = $stmtVehicules->fetchAll();
               <input type="text" name="depart" placeholder="Ville de départ" required>
               <input type="text" name="destination" placeholder="Ville d'arrivée" required>
             </div>
+            <label class="field-label-inline">
+              Date de départ
+              <input type="date" name="date_depart" id="date_depart" required>
+            </label>
             <div class="form-row">
-              <input type="datetime-local" name="date_depart" id="date_depart" required>
-              <input type="number" name="prix" placeholder="Prix (€)" step="1" min="2" required>
+              <label class="field-label-inline">
+                Heure de départ
+                <input type="time" name="heure_depart" required>
+              </label>
+              <label class="field-label-inline">
+                Heure d'arrivée <span class="field-optional">(optionnel)</span>
+                <input type="time" name="heure_arrivee">
+              </label>
             </div>
+            <label class="field-label-inline">
+              Prix par personne (crédits)
+              <input type="number" name="prix" placeholder="Ex : 5" step="1" min="2" required>
+            </label>
             <button type="submit">Créer le covoiturage</button>
           </form>
           <div id="message-voyage" style="display:none;"></div>
