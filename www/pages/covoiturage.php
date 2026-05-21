@@ -158,7 +158,7 @@ if ($searchSubmitted) {
 
                 <!-- Prix + bouton -->
                 <div class="trajet-cta">
-                  <span class="trajet-prix"><?= (int)$c['prix_personne'] ?> €</span>
+                  <span class="trajet-prix"><?= (int)$c['prix_personne'] ?> crédits</span>
                   <a href="detail.php?id=<?= $c['covoiturage_id'] ?>" class="trajet-btn-detail">Voir le détail →</a>
                 </div>
 
