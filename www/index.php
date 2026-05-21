@@ -76,7 +76,10 @@ require_once __DIR__ . '/bootstrap.php';
           <form class="search-box" method="GET" action="pages/covoiturage.php" role="search" aria-label="Rechercher un covoiturage">
             <input type="text" name="depart" placeholder="Départ" aria-label="Ville de départ"/>
             <input type="text" name="destination" placeholder="Arrivée" aria-label="Ville d'arrivée"/>
-            <input type="date" name="date" aria-label="Date du trajet"/>
+            <div class="date-wrapper">
+              <input type="date" name="date" aria-label="Date du trajet">
+              <span class="date-ph" aria-hidden="true">Date</span>
+            </div>
             <button type="submit">Recherche</button>
           </form>
           <div class="carousel">
@@ -111,7 +114,14 @@ require_once __DIR__ . '/bootstrap.php';
     <script src="assets/js/modal-connexion.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        new ModalConnexion(); // instancie et lance automatiquement
+        new ModalConnexion();
+        document.querySelectorAll('.date-wrapper').forEach(function(dw) {
+          var di = dw.querySelector('input[type="date"]');
+          if (!di) return;
+          function sync() { dw.classList.toggle('has-value', di.value !== ''); }
+          di.addEventListener('change', sync);
+          sync();
+        });
       });
     </script>
     <script src="assets/js/carousel.js"></script>

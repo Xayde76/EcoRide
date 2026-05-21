@@ -69,7 +69,10 @@ if ($searchSubmitted) {
       <form class="covoiturage-search" method="GET" action="">
         <input type="text" name="depart" placeholder="Départ" value="<?= htmlspecialchars($filtres['depart']) ?>" />
         <input type="text" name="destination" placeholder="Arrivée" value="<?= htmlspecialchars($filtres['destination']) ?>" />
-        <input type="date" name="date" value="<?= htmlspecialchars($filtres['date']) ?>" />
+        <div class="date-wrapper">
+          <input type="date" name="date" value="<?= htmlspecialchars($filtres['date']) ?>">
+          <span class="date-ph" aria-hidden="true">Date</span>
+        </div>
 
         <details class="filtre-depliant">
           <summary>Filtres avancés</summary>
@@ -176,6 +179,13 @@ if ($searchSubmitted) {
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       new ModalConnexion();
+      document.querySelectorAll('.date-wrapper').forEach(function(dw) {
+        var di = dw.querySelector('input[type="date"]');
+        if (!di) return;
+        function sync() { dw.classList.toggle('has-value', di.value !== ''); }
+        di.addEventListener('change', sync);
+        sync();
+      });
     });
   </script>
 </body>

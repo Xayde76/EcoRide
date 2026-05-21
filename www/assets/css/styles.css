@@ -417,10 +417,34 @@ footer a:hover {
   background: white;
 }
 
-.covoiturage-search input[type="date"] {
+.covoiturage-search input[type="date"],
+.search-box input[type="date"] {
   -webkit-appearance: none;
   appearance: none;
   min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Wrapper simulant le placeholder pour input[type="date"] sur mobile */
+.date-wrapper {
+  position: relative;
+  flex: 1 1 150px;
+  min-width: 120px;
+}
+.date-ph {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+  font-size: 0.93rem;
+  pointer-events: none;
+  user-select: none;
+}
+.date-wrapper:focus-within .date-ph,
+.date-wrapper.has-value .date-ph {
+  display: none;
 }
 
 .covoiturage-search button {
