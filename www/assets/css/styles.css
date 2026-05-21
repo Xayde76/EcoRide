@@ -539,6 +539,11 @@ footer a:hover {
   flex-shrink: 0;
 }
 
+.filtre-depliant input {
+  flex: none;
+  min-width: 0;
+}
+
 .filtre-depliant label input[type="number"] {
   padding: 0.45rem 0.65rem;
   border: 1px solid #ccc;
