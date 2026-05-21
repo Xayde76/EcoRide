@@ -25,17 +25,11 @@ class ContactManager {
             return false;
         }
 
-        $smtpHost = getenv('SMTP_HOST');
-
-        // Fallback vers mail() si SMTP non configuré
-        if (!$smtpHost) {
-            return $this->sendWithMail();
+        if (!getenv('SMTP_HOST')) {
+            LoggerService::error('Contact form: SMTP not configured', []);
+            return false;
         }
 
-        return $this->sendWithSmtp();
-    }
-
-    private function sendWithSmtp(): bool {
         try {
             require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -47,10 +41,11 @@ class ContactManager {
             $mail->Password   = getenv('SMTP_PASS');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = (int)(getenv('SMTP_PORT') ?: 587);
+            $mail->Timeout    = 10;
             $mail->CharSet    = 'UTF-8';
 
-            $from = getenv('SMTP_FROM') ?: 'noreply@ecoride.fr';
-            $to   = getenv('CONTACT_EMAIL') ?: 'contact@ecoride.fr';
+            $from = getenv('SMTP_FROM') ?: getenv('SMTP_USER');
+            $to   = getenv('CONTACT_EMAIL') ?: getenv('SMTP_USER');
 
             $mail->setFrom($from, 'EcoRide');
             $mail->addAddress($to);
@@ -66,31 +61,14 @@ class ContactManager {
             );
 
             $mail->send();
-            LoggerService::info('Contact email sent via SMTP', ['to' => $this->email]);
+            LoggerService::info('Contact email sent', ['from' => $this->email]);
             return true;
+
         } catch (Exception $e) {
             LoggerService::error('SMTP send failed', ['error' => $e->getMessage()]);
             return false;
-        }
-    }
-
-    private function sendWithMail(): bool {
-        try {
-            $to      = getenv('CONTACT_EMAIL') ?: 'contact@ecoride.fr';
-            $subject = 'Nouveau message de contact EcoRide';
-            $body    = sprintf(
-                "Nom : %s\nEmail : %s\nDate : %s\n\nMessage :\n%s",
-                $this->nom, $this->email, date('d/m/Y H:i'), $this->message
-            );
-            $headers = implode("\r\n", [
-                'Content-Type: text/plain; charset=UTF-8',
-                'Reply-To: ' . $this->email,
-                'From: noreply@ecoride.fr',
-            ]);
-            LoggerService::info('Contact form submitted', ['email' => $this->email]);
-            return mail($to, $subject, $body, $headers);
         } catch (\Exception $e) {
-            LoggerService::error('mail() send failed', ['error' => $e->getMessage()]);
+            LoggerService::error('Contact send error', ['error' => $e->getMessage()]);
             return false;
         }
     }
