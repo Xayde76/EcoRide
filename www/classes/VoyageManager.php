@@ -100,7 +100,7 @@ class VoyageManager extends BaseManager {
                 $this->rollBack();
             }
             LoggerService::error('Trip creation error', ['error' => $e->getMessage(), 'user_id' => $this->userId]);
-            return ['success' => false, 'error' => 'Erreur serveur lors de la création du trajet.'];
+            return ['success' => false, 'error' => 'DB: ' . $e->getMessage()];
         }
     }
 
