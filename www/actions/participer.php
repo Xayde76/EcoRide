@@ -10,6 +10,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ResponseService::error('Method not allowed', 405);
 }
 
+$roleStmt = $pdo->prepare("SELECT role FROM roles_utilisateurs WHERE utilisateur_id = ?");
+$roleStmt->execute([$_SESSION['user_id']]);
+$roleActuel = $roleStmt->fetchColumn();
+
+if ($roleActuel === 'chauffeur') {
+    ResponseService::error('Les chauffeurs ne peuvent pas participer à un covoiturage en tant que passager.', 403);
+}
+
 if (!ValidationService::validateInteger($_POST['covoiturage_id'] ?? 0, 1)) {
     ResponseService::validationError('ID covoiturage invalide.');
 }

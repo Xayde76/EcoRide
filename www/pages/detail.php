@@ -28,9 +28,17 @@ $trajet = $stmt->fetch();
 if (!$trajet) {
     header('Location: ' . BASE_URL . '/pages/covoiturage.php');
     exit;
+
 }
 
 $eco = $trajet['type_vehicule'] === 'electrique' ? 'Oui' : 'Non';
+
+$roleUtilisateur = '';
+if (isset($_SESSION['user_id'])) {
+    $stmtRole = $pdo->prepare("SELECT role FROM roles_utilisateurs WHERE utilisateur_id = ?");
+    $stmtRole->execute([$_SESSION['user_id']]);
+    $roleUtilisateur = $stmtRole->fetchColumn() ?: '';
+}
 
 $stmtAvis = $pdo->prepare("SELECT auteur, commentaire, note FROM avis WHERE statut = 'publié' AND covoiturage_id = ?");
 $stmtAvis->execute([$id]);
@@ -146,8 +154,12 @@ $avis = $stmtAvis->fetchAll();
           <?php else: ?>
             <p class="detail-conducteur-nb-avis">Aucun avis pour le moment</p>
           <?php endif; ?>
-          <button class="btn detail-participer-btn" id="participer-btn" data-id="<?= $trajet['covoiturage_id'] ?>" data-prix="<?= (int)$trajet['prix_personne'] ?>">Participer</button>
-          <p id="message-participation"></p>
+          <?php if ($roleUtilisateur === 'chauffeur'): ?>
+            <p class="detail-role-notice">En tant que chauffeur, vous ne pouvez pas participer à un covoiturage. Changez votre rôle en "Passager" ou "Chauffeur/Passager" dans votre espace.</p>
+          <?php else: ?>
+            <button class="btn detail-participer-btn" id="participer-btn" data-id="<?= $trajet['covoiturage_id'] ?>" data-prix="<?= (int)$trajet['prix_personne'] ?>">Participer</button>
+            <p id="message-participation"></p>
+          <?php endif; ?>
         </div>
       </div>
 
