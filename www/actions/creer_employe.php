@@ -43,6 +43,9 @@ try {
     $stmt->execute([$nom, $email, $hash]);
     $newId = $pdo->lastInsertId();
 
+    $stmtRole = $pdo->prepare("INSERT INTO roles_utilisateurs (utilisateur_id, role) VALUES (?, 'passager')");
+    $stmtRole->execute([$newId]);
+
     LoggerService::info('Employee account created', ['admin_id' => $_SESSION['user_id'], 'new_employee_id' => $newId]);
 
     ResponseService::success([
