@@ -6,8 +6,8 @@ a2dismod mpm_prefork || true
 a2dismod mpm_worker || true
 a2dismod mpm_event || true
 
-# Activer un seul MPM
-a2enmod mpm_event
+# Activer le seul MPM compatible avec PHP
+a2enmod mpm_prefork
 
 # Lancer Apache
 exec apache2-foreground
