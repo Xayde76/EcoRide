@@ -103,6 +103,6 @@ INSERT INTO utilisateurs (nom, email, password, credits, role_id, actif)
 VALUES (
   'Administrateur',
   'admin@ecoride.fr',
-  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  'Admin1234!',
   20, 1, 1
 );
