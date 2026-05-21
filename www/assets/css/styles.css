@@ -211,10 +211,12 @@ main {
 .search-box button {
   flex: 1 1 150px;
   min-width: 120px;
-  padding: 0.7rem;
+  height: 44px;
+  padding: 0 0.7rem;
   border: none;
   border-radius: 5px;
   background: white;
+  box-sizing: border-box;
 }
 
 .search-box button {
