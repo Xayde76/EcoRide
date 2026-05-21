@@ -9,4 +9,4 @@ Disallow: /services/
 Disallow: /classes/
 Allow: /
 
-Sitemap: https://www.ecoride.fr/sitemap.xml
+Sitemap: https://ecoride-production-2313.up.railway.app/sitemap.xml

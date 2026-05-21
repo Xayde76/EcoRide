@@ -1,3 +1,9 @@
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '');
+  return d.innerHTML;
+}
+
 class EspaceUtilisateur {
   constructor() {
     this.roleSelect = document.getElementById("role");
@@ -344,10 +350,10 @@ class EspaceUtilisateur {
       container.dataset.id = id;
       container.innerHTML = `
         <div class="vehicule-info">
-          <strong>${marque} ${modele}</strong>
-          <span>${couleur} · ${plaque}</span>
+          <strong>${esc(marque)} ${esc(modele)}</strong>
+          <span>${esc(couleur)} · ${esc(plaque)}</span>
         </div>
-        <button class="btn-delete supprimer-btn" data-id="${id}">Supprimer</button>
+        <button class="btn-delete supprimer-btn" data-id="${esc(id)}">Supprimer</button>
       `;
       document.getElementById("vehicules-list")?.appendChild(container);
       this.attachDeleteButton(container.querySelector(".supprimer-btn"));
@@ -415,15 +421,15 @@ class EspaceUtilisateur {
     const li = document.createElement("li");
     li.className = "trip-item disponible";
     li.innerHTML = `
-      <a href="detail.php?id=${voyage.id}" class="trip-info-link">
+      <a href="detail.php?id=${esc(voyage.id)}" class="trip-info-link">
         <div class="trip-info">
-          <div class="trip-route">${voyage.lieu_depart} → ${voyage.lieu_arrivee}</div>
+          <div class="trip-route">${esc(voyage.lieu_depart)} → ${esc(voyage.lieu_arrivee)}</div>
           <div class="trip-meta">📅 ${new Date(voyage.date_depart).toLocaleDateString('fr-FR')}</div>
           <span class="statut-badge disponible">Disponible</span>
         </div>
       </a>
-      <form class="annuler-covoiturage-form" data-id="${voyage.id}" data-type="conducteur">
-        <input type="hidden" name="id" value="${voyage.id}">
+      <form class="annuler-covoiturage-form" data-id="${esc(voyage.id)}" data-type="conducteur">
+        <input type="hidden" name="id" value="${esc(voyage.id)}">
         <button type="submit" class="btn-annuler">Supprimer</button>
       </form>
     `;

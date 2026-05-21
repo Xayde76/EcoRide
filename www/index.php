@@ -10,20 +10,20 @@ require_once __DIR__ . '/bootstrap.php';
     <title>EcoRide – Covoiturage écologique en France</title>
     <meta name="description" content="EcoRide, la plateforme de covoiturage écologique. Trouvez ou proposez un trajet partout en France et réduisez votre empreinte carbone.">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://www.ecoride.fr/">
+    <link rel="canonical" href="https://ecoride-production-2313.up.railway.app/">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.ecoride.fr/">
+    <meta property="og:url" content="https://ecoride-production-2313.up.railway.app/">
     <meta property="og:title" content="EcoRide – Covoiturage écologique en France">
     <meta property="og:description" content="Trouvez ou proposez un trajet partout en France. Voyagez moins cher, plus vert, ensemble.">
-    <meta property="og:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+    <meta property="og:image" content="https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="EcoRide – Covoiturage écologique en France">
     <meta name="twitter:description" content="Trouvez ou proposez un trajet partout en France. Voyagez moins cher, plus vert, ensemble.">
-    <meta name="twitter:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+    <meta name="twitter:image" content="https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png">
 
     <link rel="stylesheet" href="assets/css/styles.css" />
     <link rel="icon" href="data:,">
@@ -37,8 +37,8 @@ require_once __DIR__ . '/bootstrap.php';
         {
           "@type": "Organization",
           "name": "EcoRide",
-          "url": "https://www.ecoride.fr",
-          "logo": "https://www.ecoride.fr/images/logo-ecoride.png",
+          "url": "https://ecoride-production-2313.up.railway.app",
+          "logo": "https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png",
           "contactPoint": {
             "@type": "ContactPoint",
             "email": "contact@ecoride.fr",
@@ -49,12 +49,12 @@ require_once __DIR__ . '/bootstrap.php';
         {
           "@type": "WebSite",
           "name": "EcoRide",
-          "url": "https://www.ecoride.fr",
+          "url": "https://ecoride-production-2313.up.railway.app",
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
               "@type": "EntryPoint",
-              "urlTemplate": "https://www.ecoride.fr/pages/covoiturage.php?depart={depart}&destination={destination}&date={date}"
+              "urlTemplate": "https://ecoride-production-2313.up.railway.app/pages/covoiturage.php?depart={depart}&destination={destination}&date={date}"
             },
             "query-input": "required name=depart required name=destination required name=date"
           }

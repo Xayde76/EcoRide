@@ -10,14 +10,14 @@ require_once __DIR__ . '/../bootstrap.php';
   <title>Contactez EcoRide | Covoiturage écologique</title>
   <meta name="description" content="Une question sur EcoRide ? Contactez notre équipe via le formulaire ou par email. Nous répondons rapidement.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.ecoride.fr/pages/contact.php">
+  <link rel="canonical" href="https://ecoride-production-2313.up.railway.app/pages/contact.php">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.ecoride.fr/pages/contact.php">
+  <meta property="og:url" content="https://ecoride-production-2313.up.railway.app/pages/contact.php">
   <meta property="og:title" content="Contactez EcoRide">
   <meta property="og:description" content="Une question sur notre service de covoiturage ? Écrivez-nous, nous sommes là pour vous aider.">
-  <meta property="og:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+  <meta property="og:image" content="https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png">
 
   <link rel="stylesheet" href="../assets/css/styles.css" />
   <link rel="icon" href="data:,">
@@ -49,6 +49,7 @@ require_once __DIR__ . '/../bootstrap.php';
       <p>Une question, une suggestion ou un souci ? Envoyez-nous un message via le formulaire ci-dessous.</p>
 
       <form action="../actions/traitement_contact.php" method="post" class="contact-form">
+        <input type="hidden" name="csrf_token" value="<?= CsrfService::generateToken() ?>">
         <label for="nom"><strong>Nom complet :</strong></label>
         <input type="text" id="nom" name="nom" required />
 

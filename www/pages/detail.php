@@ -50,7 +50,7 @@ $avis = $stmtAvis->fetchAll();
   <meta property="og:type" content="website">
   <meta property="og:title" content="Covoiturage <?= htmlspecialchars($trajet['lieu_depart']) ?> → <?= htmlspecialchars($trajet['lieu_arrivee']) ?> | EcoRide">
   <meta property="og:description" content="Trajet le <?= date('d/m/Y', strtotime($trajet['date_depart'])) ?> pour <?= (int)$trajet['prix_personne'] ?> crédits. Conducteur : <?= htmlspecialchars($trajet['conducteur_nom']) ?>.">
-  <meta property="og:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+  <meta property="og:image" content="https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png">
 
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="icon" href="data:,">

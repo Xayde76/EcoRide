@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.ecoride.fr/</loc>
+    <loc>https://ecoride-production-2313.up.railway.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.ecoride.fr/pages/covoiturage.php</loc>
+    <loc>https://ecoride-production-2313.up.railway.app/pages/covoiturage.php</loc>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.ecoride.fr/pages/contact.php</loc>
+    <loc>https://ecoride-production-2313.up.railway.app/pages/contact.php</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.ecoride.fr/pages/mentions-legales.php</loc>
+    <loc>https://ecoride-production-2313.up.railway.app/pages/mentions-legales.php</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>

@@ -33,14 +33,14 @@ if ($searchSubmitted) {
   <title>Rechercher un covoiturage | EcoRide</title>
   <meta name="description" content="Recherchez un covoiturage écologique en France. Filtrez par ville, date, prix et bien plus. Voyagez malin avec EcoRide.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.ecoride.fr/pages/covoiturage.php">
+  <link rel="canonical" href="https://ecoride-production-2313.up.railway.app/pages/covoiturage.php">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.ecoride.fr/pages/covoiturage.php">
+  <meta property="og:url" content="https://ecoride-production-2313.up.railway.app/pages/covoiturage.php">
   <meta property="og:title" content="Rechercher un covoiturage | EcoRide">
   <meta property="og:description" content="Trouvez votre trajet parmi des dizaines de covoiturages en France. Simple, rapide, écologique.">
-  <meta property="og:image" content="https://www.ecoride.fr/images/logo-ecoride.png">
+  <meta property="og:image" content="https://ecoride-production-2313.up.railway.app/images/logo-ecoride.png">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">

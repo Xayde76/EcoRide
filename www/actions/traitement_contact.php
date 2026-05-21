@@ -7,8 +7,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$nom = $_POST['nom'] ?? '';
-$email = $_POST['email'] ?? '';
+if (!CsrfService::validateToken($_POST['csrf_token'] ?? '')) {
+    header('Location: ' . BASE_URL . '/pages/contact.php?error=invalid');
+    exit;
+}
+
+$nom     = $_POST['nom']     ?? '';
+$email   = $_POST['email']   ?? '';
 $message = $_POST['message'] ?? '';
 
 $contact = new ContactManager($nom, $email, $message);
