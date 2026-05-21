@@ -1,5 +1,9 @@
 FROM php:8.2-apache
 
+# Fix: empêcher Apache de charger plusieurs MPM
+RUN a2dismod mpm_prefork mpm_worker mpm_event \
+    && a2enmod mpm_event
+    
 # Dépendances système
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
