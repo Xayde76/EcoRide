@@ -82,7 +82,7 @@ if ($searchSubmitted) {
               Voyage écologique uniquement
             </label>
             <label>
-              Prix max (€)
+              Prix max (crédits)
               <input type="number" name="prix_max" placeholder="Ex : 20" value="<?= htmlspecialchars($filtres['prix_max']) ?>" />
             </label>
             <label>
