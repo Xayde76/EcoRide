@@ -25,24 +25,46 @@ class ContactManager {
             return false;
         }
 
-        if (!getenv('SMTP_HOST')) {
+        $smtpHost = getenv('SMTP_HOST');
+        if (!$smtpHost) {
+            error_log('[EcoRide] Contact form: SMTP_HOST not configured');
             LoggerService::error('Contact form: SMTP not configured', []);
             return false;
         }
 
+        $autoload = __DIR__ . '/../vendor/autoload.php';
+        if (!file_exists($autoload)) {
+            error_log('[EcoRide] Contact form: vendor/autoload.php not found at ' . $autoload);
+            LoggerService::error('Contact form: autoload missing', ['path' => $autoload]);
+            return false;
+        }
+
+        require_once $autoload;
+
         try {
-            require_once __DIR__ . '/../vendor/autoload.php';
+            $debugOutput = '';
 
             $mail = new PHPMailer(true);
+            $mail->SMTPDebug  = 3;
+            $mail->Debugoutput = function (string $str, int $level) use (&$debugOutput): void {
+                $debugOutput .= $str . "\n";
+            };
             $mail->isSMTP();
-            $mail->Host       = getenv('SMTP_HOST');
+            $mail->Host       = $smtpHost;
             $mail->SMTPAuth   = true;
             $mail->Username   = getenv('SMTP_USER');
             $mail->Password   = getenv('SMTP_PASS');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = (int)(getenv('SMTP_PORT') ?: 587);
-            $mail->Timeout    = 10;
+            $mail->Timeout    = 15;
             $mail->CharSet    = 'UTF-8';
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
 
             $from = getenv('SMTP_FROM') ?: getenv('SMTP_USER');
             $to   = getenv('CONTACT_EMAIL') ?: getenv('SMTP_USER');
@@ -61,13 +83,17 @@ class ContactManager {
             );
 
             $mail->send();
-            LoggerService::info('Contact email sent', ['from' => $this->email]);
+            LoggerService::info('Contact email sent', ['to' => $to]);
             return true;
 
         } catch (Exception $e) {
-            LoggerService::error('SMTP send failed', ['error' => $e->getMessage()]);
+            $err = $e->getMessage();
+            error_log('[EcoRide] SMTP send failed: ' . $err);
+            error_log('[EcoRide] SMTP debug: ' . $debugOutput);
+            LoggerService::error('SMTP send failed', ['error' => $err]);
             return false;
         } catch (\Exception $e) {
+            error_log('[EcoRide] Contact send error: ' . $e->getMessage());
             LoggerService::error('Contact send error', ['error' => $e->getMessage()]);
             return false;
         }

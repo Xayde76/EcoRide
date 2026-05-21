@@ -39,8 +39,8 @@ COPY php/production.ini /usr/local/etc/php/conf.d/production.ini
 COPY ./www /var/www/html
 
 # Dépendances PHP (PHPMailer) — installées dans www/vendor/
-COPY composer.json /var/www/html/
-RUN composer install --no-dev --no-interaction --working-dir=/var/www/html
+COPY composer.json composer.lock /var/www/html/
+RUN composer install --no-dev --no-interaction --prefer-dist --working-dir=/var/www/html
 
 # Dossier uploads
 RUN mkdir -p /var/www/html/images/profil \
