@@ -11,6 +11,7 @@ www/vendor/
 # Ignorer les fichiers système et temporaires
 *.log
 *.lock
+!composer.lock
 .DS_Store
 Thumbs.db
 
