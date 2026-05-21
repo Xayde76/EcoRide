@@ -2377,3 +2377,37 @@ footer a:hover {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+@media (max-width: 768px) {
+  .admin-stats-kpi {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .admin-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-employe-fields {
+    flex-direction: column;
+  }
+
+  .admin-employe-btn {
+    width: 100%;
+  }
+
+  .admin-users-table {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .admin-users-table table {
+    min-width: 500px;
+  }
+
+  .admin-users-table th,
+  .admin-users-table td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
