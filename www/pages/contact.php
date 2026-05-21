@@ -48,7 +48,7 @@ require_once __DIR__ . '/../bootstrap.php';
       <?php endif; ?>
       <p>Une question, une suggestion ou un souci ? Envoyez-nous un message via le formulaire ci-dessous.</p>
 
-      <form action="https://formspree.io/f/<?= htmlspecialchars(getenv('FORMSPREE_ID') ?: 'REMPLACER_PAR_ID') ?>" method="post" class="contact-form">
+      <form action="https://formspree.io/f/mdajglvr" method="post" class="contact-form">
         <input type="hidden" name="_next" value="<?= BASE_URL ?>/pages/contact.php?success=1">
         <input type="hidden" name="_subject" value="Nouveau message de contact EcoRide">
         <input type="hidden" name="_language" value="fr">
