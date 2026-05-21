@@ -49,7 +49,7 @@ require_once __DIR__ . '/../bootstrap.php';
       <p>Une question, une suggestion ou un souci ? Envoyez-nous un message via le formulaire ci-dessous.</p>
 
       <form action="../actions/traitement_contact.php" method="post" class="contact-form">
-        <label for="nom">Nom :</label>
+        <label for="nom">Nom complet :</label>
         <input type="text" id="nom" name="nom" required />
 
         <label for="email">Adresse email :</label>
