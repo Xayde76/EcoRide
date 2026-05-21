@@ -2335,14 +2335,37 @@ footer a:hover {
 
   /* covoiturage */
   .covoiturage-search {
-    width: 50%;
-    align-items: center;
+    width: 92%;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .covoiturage-search input,
   .covoiturage-search button {
     width: 100%;
-    max-width: 90%;
+    flex: none;
+    max-width: 100%;
+  }
+
+  .covoiturage-search .date-wrapper {
+    flex: none;
+    width: 100%;
+  }
+
+  .filtre-depliant {
+    width: 100%;
+    flex: none;
+    box-sizing: border-box;
+  }
+
+  .filtre-depliant[open] {
+    flex: none;
+    order: unset;
+  }
+
+  .filtre-depliant[open] .filtre-grid {
+    grid-template-columns: 1fr;
+    max-width: 100%;
   }
 
   footer {
