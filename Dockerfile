@@ -1,9 +1,9 @@
 FROM php:8.2-apache
 
 # Fix: empêcher Apache de charger plusieurs MPM
-RUN a2dismod mpm_prefork mpm_worker mpm_event \
-    && a2enmod mpm_event
-    
+RUN a2dismod mpm_prefork mpm_worker mpm_event || true \
+    && a2enmod mpm_prefork
+
 # Dépendances système
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
@@ -23,16 +23,21 @@ RUN a2enmod rewrite headers
 # Configuration Apache production
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+# Configuration sécurité globale
+COPY apache/security.conf /etc/apache2/conf-available/security.conf
+RUN a2enconf security
+
 # Configuration PHP production
 COPY php/production.ini /usr/local/etc/php/conf.d/production.ini
 
 # Fichiers de l'application
 COPY ./www /var/www/html
 
-# Dossier uploads (sera monté par le volume Fly.io)
+# Dossier uploads
 RUN mkdir -p /var/www/html/images/profil \
     && chown -R www-data:www-data /var/www/html
 
+# Entrypoint pour forcer le bon MPM au runtime
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
