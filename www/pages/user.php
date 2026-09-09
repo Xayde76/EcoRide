@@ -49,7 +49,7 @@ $vehicules = $stmtVehicules->fetchAll();
           <?php endif; ?>
           <label class="avatar-upload-btn" title="Changer la photo">
             📷
-            <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" class="hidden">
           </label>
         </div>
         <div>
@@ -111,10 +111,10 @@ $vehicules = $stmtVehicules->fetchAll();
         </div>
 
         <!-- Infos chauffeur -->
-        <div class="user-card" id="chauffeur-info" style="display:none;">
+        <div class="user-card hidden" id="chauffeur-info">
           <h2>🚗 Informations Chauffeur</h2>
 
-          <h3 id="titre-vehicules" <?= empty($vehicules) ? 'style="display:none;"' : '' ?>>Mes véhicules</h3>
+          <h3 id="titre-vehicules" class="<?= empty($vehicules) ? 'hidden' : '' ?>">Mes véhicules</h3>
           <div id="vehicules-list">
             <?php foreach ($vehicules as $v): ?>
               <div class="vehicule" data-id="<?= $v['id'] ?>">
@@ -127,12 +127,12 @@ $vehicules = $stmtVehicules->fetchAll();
             <?php endforeach; ?>
           </div>
 
-          <p id="message-aucun-vehicule" class="info-msg warning" <?= !empty($vehicules) ? 'style="display:none;"' : '' ?>>
+          <p id="message-aucun-vehicule" class="info-msg warning <?= !empty($vehicules) ? 'hidden' : '' ?>">
             Enregistrez un véhicule pour utiliser le service en tant que chauffeur.
           </p>
 
           <!-- Formulaire d'ajout dépliable -->
-          <span id="message-ajout" style="display:none;"></span>
+          <span id="message-ajout" class="hidden"></span>
           <details class="add-vehicle-details">
             <summary>➕ Ajouter un véhicule</summary>
             <form id="form-ajout-vehicule" class="vehicle-form">
@@ -162,13 +162,13 @@ $vehicules = $stmtVehicules->fetchAll();
                 <input type="text" name="prefs_autres" placeholder="Autres préférences...">
               </div>
               <button type="submit">Ajouter le véhicule</button>
-              <div id="message-ajout-vehicule" style="display:none;"></div>
+              <div id="message-ajout-vehicule" class="hidden"></div>
             </form>
           </details>
         </div>
 
         <!-- Création de voyage -->
-        <div class="user-card" id="voyage-creation" style="display:none;">
+        <div class="user-card hidden" id="voyage-creation">
           <h2>➕ Nouveau covoiturage</h2>
           <form id="form-voyage">
             <label class="field-label">Véhicule utilisé</label>
@@ -203,7 +203,7 @@ $vehicules = $stmtVehicules->fetchAll();
             </label>
             <button type="submit">Créer le covoiturage</button>
           </form>
-          <div id="message-voyage" style="display:none;"></div>
+          <div id="message-voyage" class="hidden"></div>
         </div>
 
       </div><!-- /user-left-col -->
@@ -317,7 +317,7 @@ $vehicules = $stmtVehicules->fetchAll();
                         <button class="btn-ok-trajet" data-id="<?= $c['covoiturage_id'] ?>">👍 Tout s'est bien passé</button>
                         <button class="btn-prob-trajet" data-id="<?= $c['covoiturage_id'] ?>">⚠️ Signaler un problème</button>
                       </div>
-                      <form class="vp-avis-form" data-id="<?= $c['covoiturage_id'] ?>" style="display:none;">
+                      <form class="vp-avis-form hidden" data-id="<?= $c['covoiturage_id'] ?>">
                         <p class="vp-label">Laisser un avis (optionnel)</p>
                         <div class="vp-stars">
                           <span class="vp-star" data-val="1">★</span>
@@ -330,7 +330,7 @@ $vehicules = $stmtVehicules->fetchAll();
                         <textarea class="vp-commentaire" placeholder="Votre commentaire..."></textarea>
                         <button type="submit" class="btn-submit-ok">Confirmer la validation</button>
                       </form>
-                      <form class="vp-prob-form" data-id="<?= $c['covoiturage_id'] ?>" style="display:none;">
+                      <form class="vp-prob-form hidden" data-id="<?= $c['covoiturage_id'] ?>">
                         <textarea class="vp-prob-commentaire" placeholder="Décrivez le problème rencontré..." required></textarea>
                         <button type="submit" class="btn-submit-prob">Envoyer le signalement</button>
                       </form>

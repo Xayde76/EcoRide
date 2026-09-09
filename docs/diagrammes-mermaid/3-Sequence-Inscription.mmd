@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor V as Visiteur
+    participant JS as Navigateur (JS)
+    participant A as traitement_inscription.php
+    participant RL as RateLimitService
+    participant UM as UserManager
+    participant VS as ValidationService
+    participant DB as MySQL
+
+    V->>JS: Remplit pseudo / email / mot de passe
+    JS->>A: POST /actions/traitement_inscription.php
+    A->>RL: isRateLimited("register_IP", 3, 3600)
+    RL-->>A: false
+    A->>UM: register(nom, email, password, confirm)
+    UM->>VS: validateString / validateEmail / validatePassword
+    VS-->>UM: OK
+    UM->>DB: SELECT id FROM utilisateurs WHERE email = ?
+    DB-->>UM: aucun résultat
+    UM->>DB: INSERT INTO utilisateurs (role_id = 3)
+    UM->>DB: INSERT INTO roles_utilisateurs (role = 'passager')
+    UM->>UM: $_SESSION[...] + CsrfService::generateToken()
+    UM-->>A: {success: true, redirect}
+    A-->>JS: 201 Created (JSON)
+    JS-->>V: Redirection accueil, session active (20 crédits)

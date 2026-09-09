@@ -1,0 +1,17 @@
+// Jeu de données de test pour la collection MongoDB ecoride_stats.stats
+// À exécuter avec mongosh une fois le conteneur mongodb démarré :
+//   docker exec -i ecoride_mongodb mongosh ecoride_stats < www/BDD/jeu_de_donnees_mongo.txt
+//
+// Ces documents correspondent aux trajets marqués 'termine' dans jeu_de_donnees.txt
+// (crédits gagnés par le conducteur = prix_personne - 2, logique reprise de valider_trajet.php).
+// Sans ce script, les deux graphiques Chart.js de la page admin restent vides : ils sont
+// alimentés par MongoDB, pas par MySQL, donc insérer le jeu de données SQL seul ne suffit pas.
+
+db.getCollection('stats').insertMany([
+  // Trajet #15 Reims -> Lille, il y a 12 jours, 15 crédits -> 13 crédits gagnés
+  { date: new Date(Date.now() - 12 * 86400000).toISOString().slice(0, 10), nb_covoiturages: 1, credits_gagnes: 13 },
+  // Trajet #14 Rouen -> Paris, il y a 8 jours, 10 crédits -> 8 crédits gagnés
+  { date: new Date(Date.now() - 8 * 86400000).toISOString().slice(0, 10),  nb_covoiturages: 1, credits_gagnes: 8 },
+  // Trajet #13 Paris -> Bordeaux, il y a 4 jours, 18 crédits -> 16 crédits gagnés
+  { date: new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10),  nb_covoiturages: 1, credits_gagnes: 16 },
+]);

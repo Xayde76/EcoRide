@@ -1,0 +1,82 @@
+-- Jeu de données de test pour EcoRide
+-- À exécuter après BDD.txt (les tables doivent déjà exister, avec les 3 rôles système déjà insérés).
+-- Les mots de passe ci-dessous sont hachés avec password_hash() (bcrypt), donc utilisables tels quels
+-- pour se connecter sur l'application avec les identifiants indiqués en commentaire.
+--
+-- Les identifiants utilisateurs démarrent à 10 (au lieu de 1) pour éviter toute collision avec un
+-- compte déjà existant sur une base de développement (ex. le premier compte créé manuellement).
+
+-- =========================================================
+-- Utilisateurs
+-- =========================================================
+-- Compte administrateur (généré manuellement, conformément à la règle métier :
+-- l'inscription publique attribue toujours role_id = 3)
+-- Connexion : admin@ecoride.fr / admin123
+INSERT INTO utilisateurs (id, nom, email, password, credits, role_id, actif) VALUES
+(10, 'Admin EcoRide',    'admin@ecoride.fr',            '$2y$10$z3NDYyTYbuVPunRh1urbNu3kXiYX4l5T3pVQ8bexC2dsNZV/jEGSW', 20, 1, 1);
+
+-- Compte employé
+-- Connexion : julie.moderateur@ecoride.fr / mixte123
+INSERT INTO utilisateurs (id, nom, email, password, credits, role_id, actif) VALUES
+(11, 'Julie Moderateur', 'julie.moderateur@ecoride.fr',  '$2y$10$NM0A9megemeFm.XAHGJiC.bZotAnD1rqtr5VNQ5UOHPNXtdAkdA5W', 20, 2, 1);
+
+-- Comptes utilisateurs standards (role_id = 3)
+-- Mots de passe : passager123 / chauffeur123 selon le profil dominant
+INSERT INTO utilisateurs (id, nom, email, password, credits, role_id, actif) VALUES
+(12, 'Jose Garcia',      'jose.garcia@ecoride.fr',       '$2y$10$eaXtpal9QWIC6REmnP2EhuToFgaQnsw2AAGibrhvFMzVba54odljm', 35, 3, 1),
+(13, 'Soraya Mohamed',   'soraya.mohamed@ecoride.fr',    '$2y$10$Y0s/RWA43LqOXKvfazqADeuWKff7ZYSkMCHpirETajEm/zxw3PFOq', 12, 3, 1),
+(14, 'Titouan Gonzal',   'titouan.gonzal@ecoride.fr',    '$2y$10$NM0A9megemeFm.XAHGJiC.bZotAnD1rqtr5VNQ5UOHPNXtdAkdA5W', 28, 3, 1),
+(15, 'Steevy Golat',     'steevy.golat@ecoride.fr',      '$2y$10$Y0s/RWA43LqOXKvfazqADeuWKff7ZYSkMCHpirETajEm/zxw3PFOq', 18, 3, 1),
+(16, 'Karim Bensalem',   'karim.bensalem@ecoride.fr',    '$2y$10$eaXtpal9QWIC6REmnP2EhuToFgaQnsw2AAGibrhvFMzVba54odljm', 40, 3, 1);
+
+-- =========================================================
+-- Rôles fonctionnels (roles_utilisateurs)
+-- =========================================================
+INSERT INTO roles_utilisateurs (utilisateur_id, role) VALUES
+(12, 'chauffeur_passager'), -- Jose Garcia
+(13, 'passager'),           -- Soraya Mohamed
+(14, 'chauffeur_passager'), -- Titouan Gonzal
+(15, 'passager'),           -- Steevy Golat
+(16, 'chauffeur');          -- Karim Bensalem
+
+-- =========================================================
+-- Véhicules (uniquement pour les chauffeurs)
+-- =========================================================
+INSERT INTO vehicules (id, utilisateur_id, plaque, date_immat, modele, marque, couleur, places, preferences, type_vehicule) VALUES
+(10, 12, 'FR-482-JG', '2021-03-15', 'Clio',   'Renault',   'Blanc', 4, 'Non-fumeur, pas d''animaux', 'diesel'),
+(11, 14, 'FR-217-TG', '2022-06-02', 'Zoé',    'Renault',   'Bleu',  4, 'Musique OK, non-fumeur',     'electrique'),
+(12, 16, 'FR-905-KB', '2020-11-20', '308',    'Peugeot',   'Gris',  4, 'Bagages moyens acceptés',    'essence');
+
+-- =========================================================
+-- Covoiturages (statuts variés pour couvrir les cas d'usage)
+-- =========================================================
+INSERT INTO covoiturage (covoiturage_id, utilisateur_id, vehicule_id, lieu_depart, lieu_arrivee, date_depart, heure_depart, heure_arrivee, nb_place, prix_personne, type_vehicule, statut) VALUES
+-- Trajets à venir, encore disponibles
+(10, 12, 10, 'Rouen',   'Paris',    DATE_ADD(CURDATE(), INTERVAL 3 DAY), '08:00:00', '10:15:00', 3, 12, 'diesel',     'disponible'),
+(11, 14, 11, 'Bordeaux','Marseille',DATE_ADD(CURDATE(), INTERVAL 5 DAY), '07:30:00', '13:00:00', 2, 25, 'electrique', 'disponible'),
+-- Trajet complet (plus de places)
+(12, 16, 12, 'Lille',   'Reims',    DATE_ADD(CURDATE(), INTERVAL 2 DAY), '09:00:00', '11:30:00', 0, 15, 'essence',    'complet'),
+-- Trajets déjà terminés (alimentent les statistiques admin)
+(13, 12, 10, 'Paris',   'Bordeaux', DATE_SUB(CURDATE(), INTERVAL 4 DAY), '06:45:00', '11:00:00', 1, 18, 'diesel',     'termine'),
+(14, 14, 11, 'Rouen',   'Paris',    DATE_SUB(CURDATE(), INTERVAL 8 DAY), '17:00:00', '19:15:00', 2, 10, 'electrique', 'termine'),
+(15, 16, 12, 'Reims',   'Lille',    DATE_SUB(CURDATE(), INTERVAL 12 DAY),'14:00:00', '16:30:00', 3, 15, 'essence',    'termine'),
+-- Trajet annulé par le chauffeur
+(16, 12, 10, 'Paris',   'Lyon',     DATE_ADD(CURDATE(), INTERVAL 1 DAY), '07:00:00', '10:30:00', 3, 20, 'diesel',     'annule');
+
+-- =========================================================
+-- Participations
+-- =========================================================
+INSERT INTO participation (covoiturage_id, utilisateur_id, statut) VALUES
+(10, 13, 'en_attente'), -- Soraya participe au trajet Rouen -> Paris à venir
+(11, 15, 'en_attente'), -- Steevy participe au trajet Bordeaux -> Marseille à venir
+(13, 13, 'validee'),    -- Soraya a validé le trajet Paris -> Bordeaux (terminé)
+(14, 15, 'validee'),    -- Steevy a validé le trajet Rouen -> Paris (terminé)
+(15, 13, 'validee');    -- Soraya a validé le trajet Reims -> Lille (terminé)
+
+-- =========================================================
+-- Avis (déposés après un trajet validé)
+-- =========================================================
+INSERT INTO avis (covoiturage_id, utilisateur_id, auteur, commentaire, note, statut) VALUES
+(13, 13, 'Soraya Mohamed', 'Trajet agréable, conducteur ponctuel et sympathique.', 5, 'publié'),
+(14, 15, 'Steevy Golat',   'Conduite un peu rapide mais rien à signaler.',        4, 'en_attente'),
+(15, 13, 'Soraya Mohamed', 'Véhicule propre, bonne ambiance durant le trajet.',   5, 'publié');

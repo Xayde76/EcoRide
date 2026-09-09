@@ -2434,3 +2434,10 @@ footer a:hover {
     font-size: 0.8rem;
   }
 }
+
+/* Utilitaire d'affichage conditionnel, en remplacement des style="display:none" en dur
+   dans les templates. Placé en fin de feuille pour primer par ordre de source sur les
+   règles de classe à spécificité égale (ex. .vp-prob-form { display: flex }). */
+.hidden {
+  display: none;
+}

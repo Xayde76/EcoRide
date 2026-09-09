@@ -1,0 +1,53 @@
+flowchart LR
+    subgraph ACTEURS["Acteurs"]
+        direction TB
+        Visiteur(["Visiteur"])
+        Utilisateur(["Utilisateur"])
+        Employe(["Employé"])
+        Admin(["Administrateur"])
+    end
+
+    subgraph SYS["Plateforme EcoRide"]
+        direction TB
+        UC1((Consulter les covoiturages))
+        UC2((Créer un compte))
+        UC3((Se connecter))
+        UC4((Contacter EcoRide))
+        UC5((Gérer profil, véhicules & rôle))
+        UC6((Consulter l'historique))
+        UC7((Participer à un covoiturage — passager))
+        UC8((Valider ou signaler un trajet — passager))
+        UC9((Publier un trajet — chauffeur))
+        UC10((Démarrer / terminer un trajet — chauffeur))
+        UC11((Annuler un trajet publié — chauffeur))
+        UC12((Modérer les avis))
+        UC13((Résoudre un litige))
+        UC14((Gérer les comptes))
+        UC15((Consulter les statistiques))
+    end
+
+    Visiteur --> UC1
+    Visiteur --> UC2
+    Visiteur --> UC3
+    Visiteur --> UC4
+
+    Utilisateur --> UC5
+    Utilisateur --> UC6
+    Utilisateur --> UC7
+    Utilisateur --> UC8
+    Utilisateur --> UC9
+    Utilisateur --> UC10
+    Utilisateur --> UC11
+
+    Employe --> UC3
+    Employe --> UC12
+    Employe --> UC13
+
+    Admin --> UC3
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+
+    UC7 -. "«include»" .-> UC3
+    UC9 -. "«include»" .-> UC3

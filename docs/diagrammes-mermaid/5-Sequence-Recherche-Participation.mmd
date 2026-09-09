@@ -1,0 +1,32 @@
+sequenceDiagram
+    actor U as Utilisateur (passager)
+    participant JS as Navigateur (JS)
+    participant P as pages/covoiturage.php
+    participant CM as CovoiturageManager
+    participant A as actions/participer.php
+    participant DB as MySQL
+
+    U->>JS: Départ, arrivée, date + filtres (éco, prix, durée, note)
+    JS->>P: GET avec paramètres de recherche
+    P->>CM: rechercherCovoiturages(filtres)
+    CM->>DB: SELECT ... WHERE statut='disponible' AND ...
+    DB-->>CM: trajets correspondants
+    CM-->>P: liste de trajets
+    P-->>JS: Affiche les cartes (pseudo, note, prix, places, éco ?)
+
+    U->>JS: Clique « Participer »
+    JS->>A: POST {covoiturage_id}
+    A->>DB: Vérifie rôle ≠ chauffeur
+    A->>DB: SELECT nb_place, prix_personne WHERE statut='disponible'
+    A->>DB: Vérifie non déjà inscrit
+    A->>DB: SELECT credits utilisateur
+    alt Crédits suffisants et place disponible
+        A->>DB: BEGIN TRANSACTION
+        A->>DB: INSERT INTO participation
+        A->>DB: UPDATE utilisateurs SET credits -= prix
+        A->>DB: UPDATE covoiturage SET nb_place -= 1
+        A->>DB: COMMIT
+        A-->>JS: 201 Participation enregistrée
+    else Crédits insuffisants
+        A-->>JS: 400 Crédits insuffisants
+    end

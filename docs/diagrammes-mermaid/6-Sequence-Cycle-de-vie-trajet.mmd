@@ -1,0 +1,32 @@
+sequenceDiagram
+    actor C as Chauffeur
+    actor P as Passager
+    participant D as demarrer_covoiturage.php
+    participant T as terminer_covoiturage.php
+    participant V as valider_trajet.php
+    participant S as signaler_probleme.php
+    participant MG as MongoStatsService
+    participant DB as MySQL
+
+    C->>D: POST démarrer {covoiturage_id}
+    D->>DB: UPDATE statut='en_cours' WHERE conducteur=C AND statut='disponible'
+    D-->>C: Trajet démarré
+
+    C->>T: POST arrivée à destination
+    T->>DB: UPDATE statut='termine' WHERE conducteur=C AND statut='en_cours'
+    T->>MG: recordTripCompleted()
+    T-->>C: Arrivée enregistrée — passagers notifiés
+
+    alt Le trajet s'est bien passé
+        P->>V: Valide le trajet (note 1-5 + commentaire optionnel)
+        V->>DB: UPDATE participation SET statut='validee'
+        V->>DB: UPDATE credits conducteur += (prix - 2)
+        V->>DB: INSERT avis (statut='en_attente')
+        V->>MG: recordCreditsEarned(2)
+        V-->>P: Trajet validé, merci !
+    else Un problème est survenu
+        P->>S: Signale un problème {covoiturage_id, commentaire}
+        S->>DB: UPDATE participation SET statut='litige', commentaire_litige
+        S-->>P: Signalement enregistré
+        Note over DB: Un employé devra résoudre le litige
+    end

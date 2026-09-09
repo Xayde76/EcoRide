@@ -1,0 +1,43 @@
+%%{init: {"flowchart": {"htmlLabels": true}}}%%
+flowchart TD
+    ROLE["<b>RÔLE</b><br/>──────────<br/><u>id</u><br/>nom"]
+    UTILISATEUR["<b>UTILISATEUR</b><br/>──────────<br/><u>id</u><br/>nom<br/>email<br/>password<br/>credits<br/>actif<br/>photo"]
+    ROLE_METIER["<b>RÔLE_MÉTIER</b><br/>──────────<br/><u>id</u><br/>role<br/>date_attribution"]
+    VEHICULE["<b>VÉHICULE</b><br/>──────────<br/><u>id</u><br/>plaque<br/>date_immat<br/>modele<br/>marque<br/>couleur<br/>places<br/>preferences<br/>type_vehicule"]
+    COVOITURAGE["<b>COVOITURAGE</b><br/>──────────<br/><u>id</u><br/>lieu_depart<br/>lieu_arrivee<br/>date_depart<br/>heure_depart<br/>heure_arrivee<br/>nb_place<br/>prix_personne<br/>type_vehicule<br/>statut"]
+    AVIS["<b>AVIS</b><br/>──────────<br/><u>id</u><br/>auteur<br/>commentaire<br/>note<br/>statut<br/>date_avis"]
+
+    A1{"occupe"}
+    A2{"endosse"}
+    A3{"possède"}
+    A4{"propose"}
+    A5{"utilise"}
+    A6{"participe"}
+    A6ATTR["statut<br/>commentaire_litige"]
+    A7{"concerne"}
+    A8{"rédige"}
+
+    UTILISATEUR ---|"1,1"| A1
+    A1 ---|"0,n"| ROLE
+
+    UTILISATEUR ---|"0,n"| A2
+    A2 ---|"1,1"| ROLE_METIER
+
+    UTILISATEUR ---|"0,n"| A3
+    A3 ---|"1,1"| VEHICULE
+
+    UTILISATEUR ---|"0,n"| A4
+    A4 ---|"1,1"| COVOITURAGE
+
+    VEHICULE ---|"0,n"| A5
+    A5 ---|"0,1"| COVOITURAGE
+
+    UTILISATEUR ---|"0,n"| A6
+    A6 ---|"0,n"| COVOITURAGE
+    A6 -.- A6ATTR
+
+    COVOITURAGE ---|"0,n"| A7
+    A7 ---|"1,1"| AVIS
+
+    UTILISATEUR ---|"0,n"| A8
+    A8 ---|"0,1"| AVIS

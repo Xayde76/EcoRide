@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor E as Employé
+    participant A as resoudre_litige.php
+    participant DB as MySQL
+
+    E->>A: POST {covoiturage_id, passager_id, resolution}
+    A->>DB: SELECT participation + covoiturage WHERE statut='litige'
+    DB-->>A: ligne trouvée
+    A->>DB: BEGIN TRANSACTION
+    alt resolution = "conducteur" (passager fautif)
+        A->>DB: UPDATE credits conducteur += (prix - 2)
+    else resolution = "passager" (conducteur fautif)
+        A->>DB: UPDATE credits passager += prix (remboursement total)
+    end
+    A->>DB: UPDATE participation SET statut='validee'
+    A->>DB: COMMIT
+    A-->>E: Litige résolu

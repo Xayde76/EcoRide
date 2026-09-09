@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor U as Utilisateur
+    participant JS as Navigateur (JS)
+    participant A as traitement_connexion.php
+    participant RL as RateLimitService
+    participant UM as UserManager
+    participant DB as MySQL
+
+    U->>JS: Saisit email + mot de passe
+    JS->>A: POST /actions/traitement_connexion.php
+    A->>RL: isRateLimited("login_IP", 5, 900)
+    alt Trop de tentatives
+        RL-->>A: true
+        A-->>JS: 429 Trop de tentatives
+    else Sous la limite
+        RL-->>A: false
+        A->>UM: login(email, password)
+        UM->>DB: SELECT id, password, role_id, actif WHERE email = ?
+        DB-->>UM: utilisateur
+        alt Compte suspendu
+            UM-->>A: {success: false, "Compte suspendu"}
+        else Mot de passe invalide
+            UM->>UM: password_verify() = false
+            UM-->>A: {success: false, "Identifiants incorrects"}
+        else Identifiants valides
+            UM->>UM: $_SESSION[...] + CsrfService::generateToken()
+            UM-->>A: {success: true, redirect}
+            A-->>JS: 200 OK
+            JS-->>U: Redirection, connecté
+        end
+    end
